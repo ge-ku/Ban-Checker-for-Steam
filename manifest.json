@@ -1,0 +1,20 @@
+{
+  "name": "Ban Checker for Steam",
+  "description": "Automatically check bans of people you recently played with (or your friends)",
+  "version": "0.3",
+  "icons": { "16": "ow16.png",
+			"48": "ow48.png",
+			"128": "ow128.png" },
+  "permissions": [
+    "storage", "*://steamcommunity.com/*", "https://api.steampowered.com/*"
+  ],
+  "options_ui": {
+    "page": "setkey.html",
+    "chrome_style": true },
+  "content_scripts": [ {
+    "js": [ "checkbans.min.js" ],
+	"run_at": "document_end",
+    "matches": [ "*://steamcommunity.com/id/*/friends*", "*://steamcommunity.com/profiles/*/friends*" ]
+  }],
+  "manifest_version": 2
+}
