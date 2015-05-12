@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Set Custom API Key for Ban Checker</title>
+  <style>
+    body: { padding: 100px; }
+  </style>
+</head>
+<body>
+  Custom API key:
+  <input type="text" id="customapikey" size="35">
+  <form>
+	<input type="radio" name="usecustom" id="radioCustom">Use custom API Key
+	<br>
+	<input type="radio"	name="usecustom" id="radioDefault" checked>Use default API Key
+  </form>
+  <a href="http://steamcommunity.com/dev/apikey">Get API Key here</a>
+  <br>
+  <div id="status"></div>
+  <div style="text-align:center;">
+  <button id="save">Save</button>
+  </div>
+  <script src="setkey.js"></script>
+</body>
+</html>
