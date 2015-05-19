@@ -1,7 +1,7 @@
 {
   "name": "Ban Checker for Steam",
   "description": "Automatically check bans of people you recently played with (or your friends)",
-  "version": "0.3",
+  "version": "0.4",
   "icons": { "16": "ow16.png",
 			"48": "ow48.png",
 			"128": "ow128.png" },
