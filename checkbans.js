@@ -111,10 +111,12 @@ javascript:(function(){
         xmlHttp.send();
     }
 
-	var defaultkey = "5DA40A4A4699DEE30C1C9A7BCE84C914";
+	var defaultkeys = ["5DA40A4A4699DEE30C1C9A7BCE84C914",
+						"5970533AA2A0651E9105E706D0F8EDDC",
+						"2B3382EBA9E8C1B58054BD5C5EE1C36A"];
 	chrome.storage.sync.get("customapikey", function(data) {
 		if (typeof data['customapikey'] == 'undefined'){
-			var apikey = defaultkey;
+			var apikey = defaultkeys[Math.floor(Math.random() * 3)];
 		}else{
 			var apikey = data['customapikey'];
 		}
