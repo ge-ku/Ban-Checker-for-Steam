@@ -45,7 +45,7 @@ javascript:(function(){
         return add(steam64identifier, miniProfileId);
     }
 
-    var friends = [].slice.call(document.querySelectorAll('#memberList .member_block, .friendHolder, .friendBlock'));
+    var friends = [].slice.call(document.querySelectorAll('#memberList .member_block, #memberManageList .member_block, .friendHolder, .friendBlock'));
     var lookup = {};
 
     friends.forEach(function(friend) {
