@@ -73,14 +73,13 @@ javascript:(function(){
                 var text = '';
 
                 if (player.NumberOfGameBans) {
-                    text += player.NumberOfGameBans + ' OW bans';
+                    text += player.NumberOfGameBans + ' OW ban' + (player.NumberOfGameBans > 1 ? 's' : '');
                 }
 
                 if (player.NumberOfVACBans) {
-                    text += (text === '' ? '' : ', ') +
-                        player.NumberOfVACBans + ' VAC bans';
+                    text += (text === '' ? '' : ', ') + player.NumberOfVACBans + ' VAC ban' + (player.NumberOfVACBans > 1 ? 's' : '');
                 }
-                text += ' ' + player.DaysSinceLastBan + ' days ago.';
+                text += ' ' + player.DaysSinceLastBan + ' day' + (player.DaysSinceLastBan > 1 ? 's' : '') + ' ago.';
 
                 span.style.color = 'rgb(255, 73, 73)';
                 span.innerHTML = text;
