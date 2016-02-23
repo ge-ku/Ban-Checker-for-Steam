@@ -24,3 +24,4 @@ Options:
 - [iEyepawd](http://www.reddit.com/user/iEyepawd) - original idea/[script](https://github.com/nicememe/VAC-Check) creator
 - [MrHayato](http://www.reddit.com/user/MrHayato) - [his script](https://github.com/MrHayato/VacBanChecker) is core of this extension
 - [Chewbacker](http://www.reddit.com/user/Chewbacker) - made [logo](http://www.reddit.com/r/GlobalOffensive/comments/33esl9/i_made_an_overwatch_pin/)
+- [AquaeAtrae](https://github.com/AquaeAtrae) - extended functionality to group members and management
