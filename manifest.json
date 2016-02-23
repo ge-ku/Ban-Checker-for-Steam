@@ -14,7 +14,7 @@
   "content_scripts": [ {
     "js": [ "checkbans.min.js" ],
 	"run_at": "document_end",
-    "matches": [ "*://steamcommunity.com/id/*/friends*", "*://steamcommunity.com/profiles/*/friends*", "*://steamcommunity.com/groups/*/members", "*://steamcommunity.com/groups/*/membersManage" ]
+    "matches": [ "*://steamcommunity.com/id/*/friends*", "*://steamcommunity.com/profiles/*/friends*", "*://steamcommunity.com/groups/*members*", "*://steamcommunity.com/groups/*/membersManage*" ]
   }],
   "manifest_version": 2
 }
