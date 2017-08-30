@@ -1,27 +1,39 @@
 {
   "name": "Ban Checker for Steam",
   "description": "Automatically check bans of people you recently played with, your friends, and group members.",
-  "version": "0.6.2",
+  "version": "1.0.0",
   "icons": { "16": "ow16.png",
 			"48": "ow48.png",
 			"128": "ow128.png" },
   "permissions": [
-    "storage", "*://steamcommunity.com/*", "https://api.steampowered.com/*"
+    "storage", "alarms", "*://steamcommunity.com/*", "https://api.steampowered.com/*"
+  ],
+  "optional_permissions": [
+    "notifications"
   ],
   "options_ui": {
     "page": "setkey.html",
     "chrome_style": true },
-  "content_scripts": [ 
+  "content_scripts": [
 	{
-		"js": [ "checkbans.js" ],
+		"js": [ "checkbans.js", "display.js" ],
 		"run_at": "document_end",
-		"matches": [ "*://steamcommunity.com/id/*/friends*", "*://steamcommunity.com/profiles/*/friends*", "*://steamcommunity.com/groups/*/members*" ]
+		"matches": [ "*://steamcommunity.com/id/*/friends*", "*://steamcommunity.com/profiles/*/friends*" ]
 	},
+  {
+    "js": [ "checkbans.js"],
+    "run_at": "document_end",
+    "matches": [ "*://steamcommunity.com/groups/*/members*" ]
+  },
 	{
 		"js": [ "replaceurl.js" ],
 		"run_at": "document_end",
 		"matches": [ "*://steamcommunity.com/groups/*" ]
 	}
   ],
+  "background": {
+    "scripts": ["history.js"],
+    "persistent": false
+  },
   "manifest_version": 2
 }
