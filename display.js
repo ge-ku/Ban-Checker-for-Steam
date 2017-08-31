@@ -38,6 +38,7 @@ function showSettings() {
         settingsShade.id = 'settingsShade';
         settingsShade.addEventListener('click', hideSettings);
         document.body.appendChild(settingsShade);
+        initOptions();
         showSettings();
       });
   }

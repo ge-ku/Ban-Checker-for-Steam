@@ -1,4 +1,4 @@
-function save_options() {
+function saveOptions() {
 	var customapikey = document.getElementById('customapikey').value;
 	if (document.getElementById('radioCustom').checked && customapikey != '') {
 		//use custom key
@@ -27,7 +27,7 @@ function save_options() {
 	}
 }
 
-function restore_options() {
+function restoreOptions() {
 	chrome.storage.sync.get(["customapikey", "greentext"], function (data) {
 		if (typeof data['customapikey'] == 'undefined') {
 
@@ -43,5 +43,11 @@ function restore_options() {
 	})
 }
 
-document.addEventListener('DOMContentLoaded', restore_options);
-document.getElementById('save').addEventListener('click', save_options);
+function initOptions(){
+	restoreOptions();
+	document.getElementById('save').addEventListener('click', saveOptions);
+}
+
+if (document.location.protocol == 'chrome-extension:') {
+	document.addEventListener('DOMContentLoaded', initOptions);
+}

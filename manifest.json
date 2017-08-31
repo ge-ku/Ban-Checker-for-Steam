@@ -19,7 +19,7 @@
   ],
   "content_scripts": [
 	{
-    "js": [ "checkbans.js", "display.js" ],
+    "js": [ "checkbans.js", "options.js", "display.js" ],
     "css": [ "display.css" ],
 		"run_at": "document_end",
 		"matches": [ "*://steamcommunity.com/id/*/friends*", "*://steamcommunity.com/profiles/*/friends*" ]
