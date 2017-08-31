@@ -32,12 +32,10 @@ function showSettings() {
       .then(function (settingsHTML) {
         var settingsDiv = document.createElement('div');
         settingsDiv.id = 'settingsDiv';
-        settingsDiv.class = 'fadeOut';
         settingsDiv.innerHTML = settingsHTML;
         document.body.appendChild(settingsDiv);
         var settingsShade = document.createElement('div');
         settingsShade.id = 'settingsShade';
-        settingsShade.class = 'settingsCancel fadeOut';
         settingsShade.addEventListener('click', hideSettings);
         document.body.appendChild(settingsShade);
         showSettings();
@@ -269,6 +267,7 @@ function renderBanCheker() {
   body.appendChild(main);
 
   var pagination = document.createElement('div');
+  pagination.classList.add('banchecker-pagination');
   pagination.innerHTML = `<input id="loadMore" type="button" value="Load ` + loadMoreValue + ` more games">
                           <input id="loadAll" type="button" value="Load all games (may lag)">
                           <div id="paginationNoMore" style="visibility:hidden; padding-top:.5em">No more games to load</div>`;
