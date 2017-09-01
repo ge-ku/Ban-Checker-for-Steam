@@ -345,7 +345,7 @@ function banCheckProfiles() {
           } else {
             var gamesToScan = [];
             var playersToScan = [];
-            data.games.forEach(function(game){
+            allRecordedGames.forEach(function(game){
               if (playersToScan.length > 99 || game.lastScanTime < lastTimeScannedData.lastTimeScanned) return;
               game.players.forEach(function(player){
                 if (playersToScan.length > 99){
