@@ -137,7 +137,7 @@ function doneScanning(gamesArray) {
   if (emptyStorage) {
     allRecordedGames = gamesArray;
   } else {
-    allRecordedGames = allRecordedGames.concat(gamesArray);
+    allRecordedGames = gamesArray.concat(allRecordedGames);
   }
   chrome.storage.local.set({'games': allRecordedGames}, function() {
     console.log("Saved " + gamesArray.length + " new game" + (gamesArray.length == 1 ? "." : "s."));
@@ -149,7 +149,7 @@ function doneScanning(gamesArray) {
 function startScanningRoutine() {
   chrome.storage.local.get('games', function(data) {
     allRecordedGames = data.games;
-    console.log(allRecordedGames)
+    console.log(allRecordedGames);
     if (typeof allRecordedGames === 'undefined' || allRecordedGames === 0) {
       emptyStorage = true;
     } else {
@@ -443,5 +443,13 @@ chrome.alarms.create("historyRecordRoutine", {delayInMinutes: 5, periodInMinutes
 chrome.alarms.onAlarm.addListener(function(alarm){
   if (alarm.name == "historyRecordRoutine"){
     startScanningRoutine();
+  }
+});
+
+chrome.runtime.onInstalled.addListener(function(details){
+  console.log(details.previousVersion);
+  if (details.previousVersion < '1.0.6'){
+	console.log("old version detected, removing storage data...");
+	chrome.storage.local.clear();
   }
 });
