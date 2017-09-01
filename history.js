@@ -1,5 +1,10 @@
-var lastRecordedGameTime = 0; // when last recorded game occured
+var lastRecordedGameTime = 0; // When last recorded game occured
+var rightNow = Number (new Date); // Time right now, should be consistent for the duration of one routine call
 var emptyStorage = false;
+var allRecordedGames; // Contains all recorded games
+                      // We're loading everything when routine is started
+                      // And saving it back to storage once we're finished
+
 
 function Game(time, appid, players) {
   this.time = time; // unix timestamp
@@ -129,28 +134,27 @@ function doneScanning(gamesArray) {
   gamesArray.sort(function(a, b) {
     return b.time - a.time;
   });
-  chrome.storage.local.get('games', function(data) {
-    if (emptyStorage) {
-      var gamesForStorage = gamesArray;
-    } else {
-      var gamesForStorage = data.games.concat(gamesArray);
-    }
-    chrome.storage.local.set({'games': gamesForStorage}, function() {
-      console.log("Saved " + gamesArray.length + " new game" + (gamesArray.length == 1 ? "." : "s."));
-      console.log("Now start checking recorded profiles for bans...");
-      banCheckProfiles();
-    });
+  if (emptyStorage) {
+    allRecordedGames = gamesArray;
+  } else {
+    allRecordedGames = allRecordedGames.concat(gamesArray);
+  }
+  chrome.storage.local.set({'games': allRecordedGames}, function() {
+    console.log("Saved " + gamesArray.length + " new game" + (gamesArray.length == 1 ? "." : "s."));
+    console.log("Now start checking recorded profiles for bans...");
+    banCheckProfiles();
   });
 }
 
 function startScanningRoutine() {
   chrome.storage.local.get('games', function(data) {
-    console.log(data.games)
-    if (typeof data.games === 'undefined' || data.games.length === 0) {
+    allRecordedGames = data.games;
+    console.log(allRecordedGames)
+    if (typeof allRecordedGames === 'undefined' || allRecordedGames === 0) {
       emptyStorage = true;
     } else {
       emptyStorage = false; // important!
-      lastRecordedGameTime = data.games[0].time;
+      lastRecordedGameTime = allRecordedGames[0].time;
     }
     console.log("Last recorded game: " + lastRecordedGameTime);
     var gamesArray = [];
@@ -204,31 +208,26 @@ function scanGames(players, games, apikey, iteration) {
       }, 1000);
     } else {
       var rightNow = Number (new Date());
-      chrome.storage.local.set({'lastTimeScanned': rightNow}, function() {
-        console.log("Done for now.");
+      games.forEach(function(gameScanned){
+          var indexOfScannedGame = -1;
+          for (var i=0; i < allRecordedGames.length; i++) {
+            if (allRecordedGames[i].time == gameScanned.time
+                && allRecordedGames[i].appid == gameScanned.appid
+                && allRecordedGames[i].players.length == gameScanned.players.length
+            ) {
+              indexOfScannedGame = i;
+              break;
+            }
+          }
+          if (indexOfScannedGame > -1){
+            console.log(allRecordedGames[indexOfScannedGame]);
+            allRecordedGames[indexOfScannedGame].lastScanTime = rightNow;
+          }
       });
-      chrome.storage.local.get('games', function(allGames){
-        recordedGames = allGames.games;
-        games.forEach(function(gameScanned){
-            var indexOfScannedGame = -1;
-            for (var i=0; i < recordedGames.length; i++) {
-              if (recordedGames[i].time == gameScanned.time
-                  && recordedGames[i].appid == gameScanned.appid
-                  && recordedGames[i].players.length == gameScanned.players.length
-              ) {
-                indexOfScannedGame = i;
-                break;
-              }
-            }
-            if (indexOfScannedGame > -1){
-              console.log(recordedGames[indexOfScannedGame]);
-              recordedGames[indexOfScannedGame].lastScanTime = rightNow;
-            }
-        });
-        chrome.storage.local.set({'games': recordedGames}, function() {
-          console.log (recordedGames);
-          console.log ("Updated time for scanned games");
-        });
+      console.log (allRecordedGames);
+      console.log ("Updated time for scanned games");
+      chrome.storage.local.set({'lastTimeScanned': rightNow, 'games': allRecordedGames}, function() {
+        console.log("Done for now.");
       });
     }
   });
@@ -239,29 +238,20 @@ function Busted(player, vacBans, gameBans) {
   // every occurrence of player.steamid (in case we played with together multiple times)
   // in stored array and set bannedAfterRecording to true.
   // We'll also notify user about this, including time passed since the last game played together.
-  chrome.storage.local.get('games', function(data) {
-    if (typeof data.games === 'undefined' || data.games.length === 0) {
-      console.log("This should never come up.")
-    } else {
-      var notified = false;
-      var steamIdToFind = player.steamid;
-      var games = data.games;
-      games.forEach(function(game){
-        game.players.forEach(function(player){
-          if (player.steamid == steamIdToFind) {
-            player.bannedAfterRecording = true;
-            if (!notified){
-              notified = true; // we'll notify only for the last game played together with this player
-              BanNotification(player, game, vacBans, gameBans);
-            }
-          }
-        });
-      });
-      chrome.storage.local.set({'games': games}, function() {
-        console.log ("Marked banned player in storage.");
-      });
-    }
+  var notified = false;
+  var steamIdToFind = player.steamid;
+  allRecordedGames.forEach(function(game){
+    game.players.forEach(function(player){
+      if (player.steamid == steamIdToFind) {
+        player.bannedAfterRecording = true;
+        if (!notified){
+          notified = true; // we'll notify only for the last game played together with this player
+          BanNotification(player, game, vacBans, gameBans);
+        }
+      }
+    });
   });
+  console.log ("Marked banned player.");
 }
 
 function BanNotification(player, game, vacBans, gameBans){
@@ -350,28 +340,26 @@ function banCheckProfiles() {
         else {
           if (lastTimeScannedData.lastTimeScanned == undefined) lastTimeScannedData.lastTimeScanned = 0;
           // get latest games with hundred players or less to scan
-          chrome.storage.local.get('games', function(data) {
-            if (typeof data.games === 'undefined' || data.games.length === 0) {
-              console.log("Nothing to scan, storage is empty.")
-            } else {
-              var gamesToScan = [];
-              var playersToScan = [];
-              data.games.forEach(function(game){
-                if (playersToScan.length > 99 || game.lastScanTime < lastTimeScannedData.lastTimeScanned) return;
-                game.players.forEach(function(player){
-                  if (playersToScan.length > 99){
-                    return;
-                  } else {
-                    playersToScan.push(player);
-                  }
-                });
-                gamesToScan.push(game);
+          if (typeof allRecordedGames === 'undefined' || allRecordedGames.length === 0) {
+            console.log("Nothing to scan, storage is empty.")
+          } else {
+            var gamesToScan = [];
+            var playersToScan = [];
+            data.games.forEach(function(game){
+              if (playersToScan.length > 99 || game.lastScanTime < lastTimeScannedData.lastTimeScanned) return;
+              game.players.forEach(function(player){
+                if (playersToScan.length > 99){
+                  return;
+                } else {
+                  playersToScan.push(player);
+                }
               });
-              console.log("These players will be scanned now:"); console.log(playersToScan);
-              console.log("From these games:"); console.log(gamesToScan);
-              scanGames(playersToScan, gamesToScan, apikey, 0);
-            }
-          });
+              gamesToScan.push(game);
+            });
+            console.log("These players will be scanned now:"); console.log(playersToScan);
+            console.log("From these games:"); console.log(gamesToScan);
+            scanGames(playersToScan, gamesToScan, apikey, 0);
+          }
         }
       });
     } else {
@@ -379,69 +367,67 @@ function banCheckProfiles() {
       // Every 30 minutes we'll scan latest 200 players (to give priority to the most recent games)
       // and 800 older ones, keeping track on the latest scanned game so we continue from that point.
       // That's 10 API calls, Dota 2 dev forums suggest to have 1 second delay between each call.
-      chrome.storage.local.get('games', function(data) {
-        if (typeof data.games === 'undefined' || data.games.length === 0) {
-          console.log("Nothing to scan, storage is empty.")
-        } else {
-          // This array will store 10 arrays (or less if not enough games recorded).
-          // Each array inside contains games with 100 players or less
-          var BatchesOfGamesToScan = [];
-          var gamesToScan = [];
-          var playersToScan = [];
-          var lastScannedGameTime; // time of the last recorded match during previous scan
+      if (typeof allRecordedGames === 'undefined' || allRecordedGames.length === 0) {
+        console.log("Nothing to scan, storage is empty.")
+      } else {
+        // This array will store 10 arrays (or less if not enough games recorded).
+        // Each array inside contains games with 100 players or less
+        var BatchesOfGamesToScan = [];
+        var gamesToScan = [];
+        var playersToScan = [];
+        var lastScannedGameTime; // time of the last recorded match during previous scan
 
-          // 200 players from recent matches:
-          data.games.forEach(function(game){
-            if (playersToScan.length > 199) reutrn;
+        // 200 players from recent matches:
+        allRecordedGames.forEach(function(game){
+          if (playersToScan.length > 199) reutrn;
+          game.players.forEach(function(player){
+            if (playersToScan.length > 199){
+              return;
+            } else {
+              playersToScan.push(player);
+            }
+          });
+          gamesToScan.push(game);
+        });
+
+        // 800 players from older matches:
+        chrome.storage.local.get('lastScannedGameTime', function(dataL) {
+          if (typeof dataL.lastScannedGameTime === 'undefined') {
+            console.log("No time recorded of prevous games.");
+            lastScannedGameTime = gamesToScan[gamesToScan.length-1].time;
+          } else {
+            lastScannedGameTime = dataL.lastScannedGameTime;
+            if (gamesToScan[gamesToScan.length-1].time < lastScannedGameTime) {
+              lastScannedGameTime = gamesToScan[gamesToScan.length-1].time
+            }
+          }
+
+          var lastGame = false;
+          allRecordedGames.forEach(function(game){
+            if (lastScannedGameTime < game.time) {
+              return;
+            } else if (lastScannedGameTime == game.time){
+              //this is the last recorded game
+              lastGame = true;
+            }
+            if (playersToScan.length > 999) reutrn;
             game.players.forEach(function(player){
-              if (playersToScan.length > 199){
+              if (playersToScan.length > 999){
                 return;
               } else {
                 playersToScan.push(player);
               }
             });
             gamesToScan.push(game);
+            lastScannedGameTime = game.time;
           });
-
-          // 800 players from older matches:
-          chrome.storage.local.get('lastScannedGameTime', function(dataL) {
-            if (typeof dataL.lastScannedGameTime === 'undefined') {
-              console.log("No time recorded of prevous games.");
-              lastScannedGameTime = gamesToScan[gamesToScan.length-1].time;
-            } else {
-              lastScannedGameTime = dataL.lastScannedGameTime;
-              if (gamesToScan[gamesToScan.length-1].time < lastScannedGameTime) {
-                lastScannedGameTime = gamesToScan[gamesToScan.length-1].time
-              }
-            }
-
-            var lastGame = false;
-            data.games.forEach(function(game){
-              if (lastScannedGameTime < game.time) {
-                return;
-              } else if (lastScannedGameTime == game.time){
-                //this is the last recorded game
-                lastGame = true;
-              }
-              if (playersToScan.length > 999) reutrn;
-              game.players.forEach(function(player){
-                if (playersToScan.length > 999){
-                  return;
-                } else {
-                  playersToScan.push(player);
-                }
-              });
-              gamesToScan.push(game);
-              lastScannedGameTime = game.time;
-            });
-            chrome.storage.local.set({'lastScannedGameTime': lastScannedGameTime}, function() {
-              console.log("These players will be scanned now:"); console.log(playersToScan);
-              console.log("From these games:"); console.log(gamesToScan);
-              scanGames(playersToScan, gamesToScan, apikey, 0);
-            });
+          chrome.storage.local.set({'lastScannedGameTime': lastScannedGameTime}, function() {
+            console.log("These players will be scanned now:"); console.log(playersToScan);
+            console.log("From these games:"); console.log(gamesToScan);
+            scanGames(playersToScan, gamesToScan, apikey, 0);
           });
-        }
-      });
+        });
+      }
     }
   });
 }
