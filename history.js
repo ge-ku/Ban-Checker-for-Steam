@@ -334,7 +334,7 @@ function banCheckProfiles() {
         var rightNow = Number(new Date());
         var yesterdaySameTime = rightNow - 24*60*60*1000;
         if (lastTimeScannedData.lastTimeScanned > yesterdaySameTime && lastTimeScannedData.lastTimeScanned != undefined){
-          console.log ("No custom API key provided and not enough time passed since last scan.")
+          console.log ("No custom API key provided and not enough time passed since last scan.");
           return;
         }
         else {
@@ -346,7 +346,7 @@ function banCheckProfiles() {
             var gamesToScan = [];
             var playersToScan = [];
             allRecordedGames.forEach(function(game){
-              if (playersToScan.length > 99 || game.lastScanTime < lastTimeScannedData.lastTimeScanned) return;
+              if (playersToScan.length > 99) return;
               game.players.forEach(function(player){
                 if (playersToScan.length > 99){
                   return;
@@ -364,7 +364,7 @@ function banCheckProfiles() {
       });
     } else {
       // For people with their own API key we'll scan every recorded game in a loop.
-      // Every 30 minutes we'll scan latest 200 players (to give priority to the most recent games)
+      // Each routine cycle we'll scan latest 200 players (to give priority to the most recent games)
       // and 800 older ones, keeping track on the latest scanned game so we continue from that point.
       // That's 10 API calls, Dota 2 dev forums suggest to have 1 second delay between each call.
       if (typeof allRecordedGames === 'undefined' || allRecordedGames.length === 0) {
@@ -432,13 +432,12 @@ function banCheckProfiles() {
   });
 }
 
-//chrome.storage.local.clear(function(){startScanningRoutine()}); // this is for testing, don't uncomment
-
 // Initially we'll scan after 5 minute of Chrome starting, then every 2 hours.
 chrome.alarms.create("historyRecordRoutine", {delayInMinutes: 5, periodInMinutes: 120});
 
 // For testing:
 //chrome.alarms.create("historyRecordRoutine", {delayInMinutes: 0.2, periodInMinutes: 1});
+//chrome.storage.local.clear(function(){startScanningRoutine()}); // Test with empty storage
 
 chrome.alarms.onAlarm.addListener(function(alarm){
   if (alarm.name == "historyRecordRoutine"){
