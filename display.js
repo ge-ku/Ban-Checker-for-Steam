@@ -4,9 +4,15 @@ var gamesShowingIndex = 0; // Index of a last game shown
 // Add links to Ban Checker page
 var banCheckerButton = document.createElement('a');
 banCheckerButton.setAttribute('href', "//steamcommunity.com/my/friends/banchecker");
-banCheckerButton.classList.add('sectionTab');
-banCheckerButton.innerHTML = "<span>Ban Checker</span>";
-document.querySelector('.responsive_tab_select').innerHTML += '<option value="//steamcommunity.com/my/friends/banchecker">Ban Checker</option>';
+banCheckerButton.className = 'sectionTab';
+var banCheckerButtonText = document.createElement('span');
+banCheckerButtonText.appendChild(document.createTextNode('Ban Checker'));
+banCheckerButton.appendChild(banCheckerButtonText);
+
+var banCheckerMobileButton = document.createElement('option');
+banCheckerMobileButton.value = "//steamcommunity.com/my/friends/banchecker";
+banCheckerMobileButton.appendChild(document.createTextNode('Ban Checker'));
+document.querySelector('.responsive_tab_select').appendChild(banCheckerMobileButton);
 
 // Inject options.html if user opens settings from Ban Checker page 
 // These are functions to show and hide settings
@@ -18,13 +24,8 @@ function showSettings() {
   if (settingsInjected) {
     var settingsShade = document.getElementById('settingsShade');
     var settingsDiv = document.getElementById('settingsDiv');
-    // Not yet! chrome 61+
-    //settingsShade.classList.replace('fadeOut', 'fadeIn');
-    //settingsDiv.classList.replace('fadeOut', 'fadeIn');
-    settingsShade.classList.remove('fadeOut');
-    settingsShade.classList.add('fadeIn');
-    settingsDiv.classList.remove('fadeOut');
-    settingsDiv.classList.add('fadeIn');
+    settingsShade.className = 'fadeIn';
+    settingsDiv.className = 'fadeIn';
   } else {
     settingsInjected = true;
     fetch(chrome.extension.getURL('/options.html'))
@@ -46,13 +47,8 @@ function showSettings() {
 function hideSettings() {
   var settingsShade = document.getElementById('settingsShade');
   var settingsDiv = document.getElementById('settingsDiv');
-  // Not yet! chrome 61+
-  //settingsShade.classList.replace('fadeIn', 'fadeOut');
-  //settingsDiv.classList.replace('fadeOut', 'fadeIn');
-  settingsShade.classList.remove('fadeIn');
-  settingsShade.classList.add('fadeOut');
-  settingsDiv.classList.remove('fadeIn');
-  settingsDiv.classList.add('fadeOut');
+  settingsShade.className = 'fadeOut';
+  settingsDiv.className = 'fadeOut';
 }
 
 // If this page is BanChecker page (ends with "/banchecker")
@@ -72,9 +68,12 @@ function createPlayerElement(player) {
   if (player.bannedAfterRecording) playerBody.classList.add('banned');
   playerBody.setAttribute('data-miniprofile', player.miniprofile);
   playerBody.setAttribute('href', "//steamcommunity.com/profiles/" + player.steamid);
-  playerBody.innerHTML = '<a class="friendBlockLinkOverlay" href="//steamcommunity.com/profiles/' + player.steamid + '"></a>';
+  var friendBlockLinkOverlay = document.createElement('a');
+  friendBlockLinkOverlay.href = '//steamcommunity.com/profiles/' + player.steamid;
+  friendBlockLinkOverlay.className = 'friendBlockLinkOverlay';
+  playerBody.appendChild(friendBlockLinkOverlay);
   var avatar = document.createElement('div');
-  avatar.classList.add('playerAvatar');
+  avatar.className = 'playerAvatar';
   // We'll load avatars like this so we don't waste Steam API calls
   fetch('http://steamcommunity.com/profiles/' + player.steamid + '?xml=1')
     .then(response => response.text())
@@ -83,7 +82,9 @@ function createPlayerElement(player) {
       var avatarURLs = xml.match(regex);
       if (avatarURLs != null) {
         var avatarURL = avatarURLs[0];
-        avatar.innerHTML = '<img src=' + avatarURL + '>';
+        avatarImgTag = document.createElement('img');
+        avatarImgTag.src = avatarURL;
+        avatar.appendChild(avatarImgTag);
       }
       var thisPlayer = document.querySelectorAll('.friendBlock[data-miniprofile="' + player.miniprofile + '"]');
       thisPlayer.forEach(function (thisOne) {
@@ -93,7 +94,7 @@ function createPlayerElement(player) {
       });
     });
   var name = document.createElement('div');
-  name.innerHTML = player.name;
+  name.appendChild(document.createTextNode(player.name));
   playerBody.appendChild(name);
   if (player.bannedAfterRecording) {
     playerBody.style.backgroundColor = "rgba(230,0,0,0.3)";
@@ -105,17 +106,17 @@ function createPlayerElement(player) {
 // It show when the game was played, when last scan occured and info about each player
 function createGameElement(game) {
   var gameBody = document.createElement('div');
-  gameBody.classList.add('coplayGroup');
+  gameBody.className = 'coplayGroup';
 
   var gameInfo = document.createElement('div');
-  gameInfo.classList.add('gameListRow');
+  gameInfo.className = 'gameListRow';
 
   var gameImage = document.createElement('div');
-  gameImage.classList.add('gameListRowLogo');
+  gameImage.className = 'gameListRowLogo';
   gameImage.innerHTML = '<div class="gameLogoHolder_default"><div class="gameLogo"><a href="http://steamcommunity.com/app/' + game.appid + '"><img src="//cdn.akamai.steamstatic.com/steam/apps/' + game.appid + '/header.jpg"></a></div></div>';
 
   var gameAbout = document.createElement('div');
-  gameAbout.classList.add('gameListRowItem');
+  gameAbout.className = 'gameListRowItem';
   gameAbout.innerHTML = "<h4>AppID: " + game.appid + "</h4><br/>Played: " + new Date(game.time)
     + "<br/>Last Time Scanned: " + ((game.lastScanTime == 0) ? 'Never' : new Date(game.lastScanTime));
 
@@ -124,7 +125,7 @@ function createGameElement(game) {
   gameBody.appendChild(gameInfo);
 
   playersBody = document.createElement('div');
-  playersBody.classList.add('responsive_friendblocks');
+  playersBody.className = 'responsive_friendblocks';
 
   game.players.forEach(function (player) {
     playersBody.appendChild(createPlayerElement(player));
@@ -132,7 +133,7 @@ function createGameElement(game) {
 
   gameBody.appendChild(playersBody);
 
-  gameBody.innerHTML += '<div style="clear: left;"></div>';
+  gameBody.insertAdjacentHTML('beforeend', '<div style="clear: left;"></div>');
   return gameBody;
 }
 
@@ -260,15 +261,15 @@ function renderBanCheker() {
     <option value="custom">Filter by appid</option>
   </select>
   <input id="appidFilter" style="display:none" type="text" value="" placeholder="appid, for example 730"/>`;
-  extensionInfo.innerHTML += filterGames;
+  extensionInfo.insertAdjacentHTML('beforeend', filterGames);
   body.appendChild(extensionInfo);
 
   var main = document.createElement('div');
-  main.classList.add('main');
+  main.className = 'main';
   body.appendChild(main);
 
   var pagination = document.createElement('div');
-  pagination.classList.add('banchecker-pagination');
+  pagination.className = 'banchecker-pagination';
   pagination.innerHTML = `<input id="loadMore" type="button" value="Load ` + loadMoreValue + ` more games">
                           <input id="loadAll" type="button" value="Load all games (may lag)">
                           <div id="paginationNoMore" style="visibility:hidden; padding-top:.5em">No more games to load</div>`;

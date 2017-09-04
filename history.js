@@ -67,7 +67,7 @@ function scanPage(pageNumber, gamesArray, pagesAvailable) {
     credentials: 'include'
   })
   .then((response) => response.text())
-  .then(function(htmlString){
+  .then(function(htmlString) {
     document.body.innerHTML = htmlString;
     var parser = new DOMParser();
     htmlDOM = parser.parseFromString(htmlString, "text/html");
@@ -448,7 +448,7 @@ chrome.alarms.onAlarm.addListener(function(alarm){
 chrome.runtime.onInstalled.addListener(function(details){
   console.log(details.previousVersion);
   if (details.previousVersion < '1.0.6'){
-	console.log("old version detected, removing storage data...");
-	chrome.storage.local.clear();
+    console.log("old version detected, removing storage data...");
+    chrome.storage.local.clear();
   }
 });
