@@ -18,7 +18,6 @@ function Player(miniprofile, name, ban) {
   this.name = name; // Name when recorded
   this.bannedAfterRecording = ban; // true or false
   this.steamid = playerSteamID64(miniprofile);
-  this.lastBanTime = 0;
 }
 
 function playerSteamID64(miniprofile) {
@@ -244,6 +243,8 @@ function Busted(player, vacBans, gameBans, timeLastBan) {
   allRecordedGames.forEach(function(game){
     game.players.forEach(function(player){
       if (player.steamid == steamIdToFind) {
+        player.numberOfVacBans = vacBans;
+        player.numberOfGameBans = gameBans;
         player.lastBanTime = timeLastBan; // updating time of last received ban even if this player already got a ban previously
         if (!player.bannedAfterRecording) {
           player.bannedAfterRecording = true;
