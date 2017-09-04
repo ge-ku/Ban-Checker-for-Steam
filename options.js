@@ -48,6 +48,6 @@ function initOptions(){
 	document.getElementById('save').addEventListener('click', saveOptions);
 }
 
-if (document.location.protocol == 'chrome-extension:') {
+if (document.location.protocol != 'http:' && document.location.protocol != 'https:') {
 	document.addEventListener('DOMContentLoaded', initOptions);
 }
