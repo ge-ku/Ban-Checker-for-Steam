@@ -18,6 +18,7 @@ function Player(miniprofile, name, ban) {
   this.name = name; // Name when recorded
   this.bannedAfterRecording = ban; // true or false
   this.steamid = playerSteamID64(miniprofile);
+  this.lastBanTime = 0;
 }
 
 function playerSteamID64(miniprofile) {
@@ -193,9 +194,9 @@ function scanGames(players, games, apikey, iteration) {
           game.players.forEach(function(gamePlayer){
             if (gamePlayer.steamid == player.SteamId) {
               gameRecordedTime = game.time;
-              if (timeLastBan > gameRecordedTime && !gamePlayer.bannedAfterRecording){
+              if (timeLastBan > gameRecordedTime){
                 // Busted!
-                Busted(gamePlayer, player.NumberOfVACBans, player.NumberOfGameBans);
+                Busted(gamePlayer, player.NumberOfVACBans, player.NumberOfGameBans, timeLastBan);
               }
             }
           });
@@ -233,7 +234,7 @@ function scanGames(players, games, apikey, iteration) {
   });
 }
 
-function Busted(player, vacBans, gameBans) {
+function Busted(player, vacBans, gameBans, timeLastBan) {
   // Player object is not a part of stored array, we need to find
   // every occurrence of player.steamid (in case we played with together multiple times)
   // in stored array and set bannedAfterRecording to true.
@@ -243,10 +244,13 @@ function Busted(player, vacBans, gameBans) {
   allRecordedGames.forEach(function(game){
     game.players.forEach(function(player){
       if (player.steamid == steamIdToFind) {
-        player.bannedAfterRecording = true;
-        if (!notified){
-          notified = true; // we'll notify only for the last game played together with this player
-          BanNotification(player, game, vacBans, gameBans);
+        player.lastBanTime = timeLastBan; // updating time of last received ban even if this player already got a ban previously
+        if (!player.bannedAfterRecording) {
+          player.bannedAfterRecording = true;
+          if (!notified){
+            notified = true; // we'll notify only for the last game played together with this player
+            BanNotification(player, game, vacBans, gameBans);
+          }
         }
       }
     });
