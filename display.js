@@ -95,10 +95,17 @@ function createPlayerElement(player) {
     });
   var name = document.createElement('div');
   name.appendChild(document.createTextNode(player.name));
-  playerBody.appendChild(name);
+  var playerStatus = document.createElement('span');
+  playerStatus.className = 'friendSmallText';
+  name.appendChild(document.createElement('br'));
+  name.appendChild(playerStatus);
   if (player.bannedAfterRecording) {
     playerBody.style.backgroundColor = "rgba(230,0,0,0.3)";
+    var daysSinceLastBan = (Date.now() - player.lastBanTime) / (1000 * 60 * 60 * 24);
+    var daysSinceLastBanMessage = 'Banned ' + Math.round(daysSinceLastBan) + ' days ago.';
+    playerStatus.appendChild(document.createTextNode(daysSinceLastBanMessage));
   }
+  playerBody.appendChild(name);
   return playerBody;
 }
 
