@@ -2,14 +2,13 @@
 
 [Install from Chrome Store.](https://chrome.google.com/webstore/detail/ban-checker-for-steam/canbadmphamemnmdfngmcabnjmjgaiki)
 
-Chrome extension to check bans of people you recently played with (or your friends)
-This is based on MrHayato's script.
+Chrome and Firefox extension to check bans of people you recently played with (or your friends and groups members).
+It also stores your recently played games and periodically checks players for VAC or Game bans. To automatically track all your recorded games you have to provide your own Steam API key. Otherwise it will only scan last 100 encountered players.
 
 Script works on pages with URIs that follow such patterns:
 - \*://steamcommunity.com/id/\*/friends\*
 - \*://steamcommunity.com/profiles/\*/friends\*
-
-Added ability to change API Key to your own in extension's Options.
+- \*://steamcommunity.com/groups/\*#members\*
 
 # Screenshots
 Extension:
