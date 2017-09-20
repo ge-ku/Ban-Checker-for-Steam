@@ -68,7 +68,6 @@ function scanPage(pageNumber, gamesArray, pagesAvailable) {
   })
   .then((response) => response.text())
   .then(function(htmlString) {
-    document.body.innerHTML = htmlString;
     var parser = new DOMParser();
     htmlDOM = parser.parseFromString(htmlString, "text/html");
     htmlDOM.querySelectorAll(".coplayGroup").forEach(function(coplayGroup){
@@ -113,7 +112,6 @@ function pagesToScan (gamesArray) {
   })
   .then((response) => response.text())
   .then(function(htmlString) {
-    document.body.innerHTML = htmlString;
     var parser = new DOMParser();
     htmlDOM = parser.parseFromString(htmlString, "text/html");
     if (htmlDOM.querySelector(".pagingPageLink") == undefined) {
@@ -384,7 +382,7 @@ function banCheckProfiles() {
 
         // 200 players from recent matches:
         allRecordedGames.forEach(function(game){
-          if (playersToScan.length > 199) reutrn;
+          if (playersToScan.length > 199) return;
           game.players.forEach(function(player){
             if (playersToScan.length > 199){
               return;
@@ -415,7 +413,7 @@ function banCheckProfiles() {
               //this is the last recorded game
               lastGame = true;
             }
-            if (playersToScan.length > 999) reutrn;
+            if (playersToScan.length > 999) return;
             game.players.forEach(function(player){
               if (playersToScan.length > 999){
                 return;

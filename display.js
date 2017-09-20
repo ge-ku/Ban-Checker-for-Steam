@@ -1,4 +1,4 @@
-var loadMoreValue = 15; // How many games to load each increment
+const loadMoreValue = 15; // How many games to load each increment
 var gamesShowingIndex = 0; // Index of a last game shown
 
 // Add links to Ban Checker page
@@ -120,12 +120,37 @@ function createGameElement(game) {
 
   var gameImage = document.createElement('div');
   gameImage.className = 'gameListRowLogo';
-  gameImage.innerHTML = '<div class="gameLogoHolder_default"><div class="gameLogo"><a href="http://steamcommunity.com/app/' + game.appid + '"><img src="//cdn.akamai.steamstatic.com/steam/apps/' + game.appid + '/header.jpg"></a></div></div>';
+
+  var gameLogoHolder_default = document.createElement('div');
+  gameLogoHolder_default.className = 'gameLogoHolder_default';
+  var gameLogo = document.createElement('div');
+  gameLogo.className = 'gameLogo';
+  var logoLink = document.createElement('a');
+  logoLink.href = 'http://steamcommunity.com/app/' + game.appid;
+  var logoImg = document.createElement('img');
+  logoImg.src = '//cdn.akamai.steamstatic.com/steam/apps/' + game.appid + '/header.jpg';
+  logoLink.appendChild(logoImg);
+  gameLogo.appendChild(logoLink);
+  gameLogoHolder_default.appendChild(gameLogo);
+  gameImage.appendChild(gameLogoHolder_default);
 
   var gameAbout = document.createElement('div');
   gameAbout.className = 'gameListRowItem';
-  gameAbout.innerHTML = "<h4>AppID: " + game.appid + "</h4><br/>Played: " + new Date(game.time)
-    + "<br/>Last Time Scanned: " + ((game.lastScanTime == 0) ? 'Never' : new Date(game.lastScanTime));
+
+  var gameAboutAppName = document.createElement('h4');
+  gameAboutAppName.textContent = 'AppID: ' + game.appid;
+  gameAbout.appendChild(gameAboutAppName);
+  gameAbout.appendChild(document.createElement('br'));
+
+  var textNodePlayed = document.createTextNode(
+    'Played: ' + new Date(game.time)
+  );
+  gameAbout.appendChild(textNodePlayed);
+  gameAbout.appendChild(document.createElement('br'));
+  var textNodeScanned = document.createTextNode(
+    'Last Time Scanned: ' + ((game.lastScanTime == 0) ? 'Never' : new Date(game.lastScanTime))
+  )
+  gameAbout.appendChild(textNodeScanned);
 
   gameInfo.appendChild(gameImage);
   gameInfo.appendChild(gameAbout);

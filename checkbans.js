@@ -65,7 +65,8 @@ function setVacation(player) {
         span.style.display = 'block';
 
         if (inGameText) {
-            inGameText.innerHTML = inGameText.innerHTML.replace(/<br ?\/?>/, ' - ');
+            var inGameTextSeparator = document.createTextNode(' - ');
+            inGameText.replaceChild(inGameTextSeparator, inGameText.querySelector('br'));
         }
 
         if (player.NumberOfVACBans || player.NumberOfGameBans) {
@@ -81,10 +82,10 @@ function setVacation(player) {
             text += ' ' + player.DaysSinceLastBan + ' day' + (player.DaysSinceLastBan > 1 ? 's' : '') + ' ago.';
 
             span.style.color = 'rgb(255, 73, 73)';
-            span.innerHTML = text;
+            span.textContent = text;
         } else if (greentext){
             span.style.color = 'rgb(43, 203, 64)';
-            span.innerHTML = 'No Bans for this player.';
+            span.textContent = 'No Bans for this player.';
         }
 
         friend.querySelector('.friendSmallText').appendChild(span);
