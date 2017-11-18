@@ -148,7 +148,7 @@ function startScanningRoutine() {
   chrome.storage.local.get('games', function(data) {
     allRecordedGames = data.games;
     console.log(allRecordedGames);
-    if (typeof allRecordedGames === 'undefined' || allRecordedGames === 0) {
+    if (typeof allRecordedGames === 'undefined' || allRecordedGames.length === 0) {
       emptyStorage = true;
     } else {
       emptyStorage = false; // important!
