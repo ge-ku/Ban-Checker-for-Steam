@@ -75,10 +75,10 @@ function createPlayerElement(player) {
   var avatar = document.createElement('div');
   avatar.className = 'playerAvatar';
   // We'll load avatars like this so we don't waste Steam API calls
-  fetch('http://steamcommunity.com/profiles/' + player.steamid + '?xml=1')
+  fetch('//steamcommunity.com/profiles/' + player.steamid + '?xml=1')
     .then(response => response.text())
     .then(function (xml) {
-      var regex = /http:\/\/(.+)_medium.jpg/;
+      var regex = /http(?:s)?:\/\/(.+)_medium.jpg/;
       var avatarURLs = xml.match(regex);
       if (avatarURLs != null) {
         var avatarURL = avatarURLs[0];
@@ -126,9 +126,9 @@ function createGameElement(game) {
   var gameLogo = document.createElement('div');
   gameLogo.className = 'gameLogo';
   var logoLink = document.createElement('a');
-  logoLink.href = 'http://steamcommunity.com/app/' + game.appid;
+  logoLink.href = '//steamcommunity.com/app/' + game.appid;
   var logoImg = document.createElement('img');
-  logoImg.src = '//cdn.akamai.steamstatic.com/steam/apps/' + game.appid + '/header.jpg';
+  logoImg.src = '//steamcdn-a.akamaihd.net/steam/apps/' + game.appid + '/header.jpg';
   logoLink.appendChild(logoImg);
   gameLogo.appendChild(logoLink);
   gameLogoHolder_default.appendChild(gameLogo);
