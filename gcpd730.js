@@ -7,7 +7,8 @@ let apikey = '';
 
 const banStats = {
     vacBans: 0,
-    gameBans: 0
+    gameBans: 0,
+    recentBans: 0,
 }
 
 const getSteamID64 = minProfile => '76' + (parseInt(minProfile) + 561197960265728);
@@ -71,11 +72,28 @@ const updateStats = () => {
 
 const formatMatchTables = () => {
     document.querySelectorAll('.csgo_scoreboard_inner_right:not(.banchecker-formatted)').forEach(table => {
+        const leftColumn = table.parentElement.parentElement.querySelector('.csgo_scoreboard_inner_left');
+        const matchDate = leftColumn.textContent.match(/(20\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)/);
+        let daysSinceMatch = -1;
+        if (matchDate.length > 6) {
+            const year = parseInt(matchDate[1], 10);
+            const month = parseInt(matchDate[2], 10) - 1;
+            const day = parseInt(matchDate[3], 10);
+            const hour = parseInt(matchDate[4], 10);
+            const minute = parseInt(matchDate[5], 10);
+            const second = parseInt(matchDate[6], 10);
+            const matchDateObj = new Date(year, month, day, hour, minute, second);
+            const matchDayTime = matchDateObj.getTime();
+            const currentTime = Date.now();
+            const timePassed = currentTime - matchDayTime;
+            daysSinceMatch = Math.ceil(timePassed / (1000 * 60 * 60 * 24));
+        }
         table.querySelectorAll('tbody > tr').forEach((tr, i) => {
             if (i === 0 || tr.childElementCount < 3) return;
             const minProfile = tr.querySelector('.linkTitle').dataset.miniprofile;
             const steamID64 = getSteamID64(minProfile);
             tr.dataset.steamid64 = steamID64;
+            tr.dataset.dayssince = daysSinceMatch;
             tr.classList.add('banchecker-profile');
         });
         table.classList.add('banchecker-formatted');
@@ -164,6 +182,8 @@ const checkBans = (players) => {
             .then(res => res.json())
             .then(json => {
                 json.players.forEach(player => {
+                    const playerEls = document.querySelectorAll(`tr[data-steamid64="${player.SteamId}"]`);
+                    const daySinceLastMatch = parseInt(playerEls[0].dataset.dayssince, 10);
                     let verdict = '';
                     if (player.NumberOfVACBans > 0) {
                         verdict += 'VAC';
@@ -174,12 +194,16 @@ const checkBans = (players) => {
                         verdict += 'Game';
                         banStats.gameBans++;
                     }
-                    const playerEls = document.querySelectorAll(`tr[data-steamid64="${player.SteamId}"]`);
+                    if (verdict && daySinceLastMatch > player.DaysSinceLastBan) banStats.recentBans++;
                     playerEls.forEach(playerEl => {
                         playerEl.classList.add('banchecker-checked');
                         verdictEl = playerEl.querySelector('.banchecker-bans');
                         if (verdict) {
-                            verdictEl.style.color = 'red';
+                            if (daySinceLastMatch > player.DaysSinceLastBan) {
+                                verdictEl.style.color = 'red';
+                            } else {
+                                verdictEl.style.color = 'grey';
+                            }
                             verdictEl.style.cursor = 'help';
                             verdictEl.textContent = verdict;
                             verdictEl.title = `Days since last ban: ${player.DaysSinceLastBan}`;
@@ -194,13 +218,12 @@ const checkBans = (players) => {
                 else if (batches.length > i+1 && !providedCustomAPIKey) {
                     updateStatus('You did not provide your own Steam API key, only 100 players were scanned!', true);
                 } else {
-                    updateStatus(`Looks like we're done!\n` + 
-                                `There were ${banStats.vacBans} VAC banned and ${banStats.gameBans} ` + 
-                                `Game banned players in games we scanned.\n` +
-                                `Note that not every one of those bans occured after you played together. ` +
-                                `They could receive a ban in some other game previously.\nHover over ban status ` + 
-                                `to check how many days passed since last ban.\n` + 
-                                `Marking only those who received a ban after playing with you is planned.`);
+                    updateStatus(`Looks like we're done.\n\n` + 
+                                `There were ${banStats.recentBans} players who got banned after playing with you!\n\n` + 
+                                `Total ban stats: ${banStats.vacBans} VAC banned and ${banStats.gameBans} ` + 
+                                `Game banned players in games we scanned (a lot of these could happen outside of CS:GO.)\n` +
+                                `Total amount of unique players encountered: ${uniquePlayers.length}` +
+                                `\n\nHover over ban status to check how many days have passed since last ban.`);
                 }
             })
     }
@@ -221,6 +244,9 @@ const checkLoadedMatchesForBans = () => {
                 bansPlaceholder.classList.add('banchecker-bans');
                 bansPlaceholder.textContent = '?';
                 tr.appendChild(bansPlaceholder);
+            } else {
+                const scoreboard = tr.querySelector('td');
+                if (scoreboard) scoreboard.setAttribute('colspan', '9');
             }
         });;
     })
