@@ -63,6 +63,7 @@ const updateStats = () => {
         totalDeaths += parseInt(myMatchStats[4].textContent, 10);
     });
     funStatsBar.textContent = 'Some fun stats for loaded matches:\n' +
+                              `Number of matches: ${document.querySelectorAll('.val_left').length}\n` +
                               `Total kills: ${totalKills}\n` +
                               `Total assists: ${totalAssists}\n` +
                               `Total deaths: ${totalDeaths}\n` + 
@@ -138,8 +139,7 @@ const fetchMatchHistoryPage = (recursively, page) => {
         updateStats();
         formatMatchTables();
         if (recursively && continue_token) {
-            updateStatus(`Loaded ${page ? page + 1 : 1} page${page ? 's' : ''} ` + 
-                         `(${document.querySelectorAll('.val_left').length} matches)...`);
+            updateStatus(`Loaded ${page ? page + 1 : 1} page${page ? 's' : ''}...`);
             fetchMatchHistoryPage(true, page ? page + 1 : 1);
         } else if (!continue_token) {
             document.querySelector('#inventory_history_loading').style.display = 'none';
