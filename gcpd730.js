@@ -91,12 +91,21 @@ const fetchMatchHistoryPage = (recursively, page) => {
         })
     .then(res => {
         if (res.ok) {
-            return res.json();
+            const contentType = res.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                return res.json();
+            } else {
+                return res.text();
+            }
         } else {
             throw Error(res.statusText);
         }
     })
     .then(json => {
+        if (!json.success) {
+            updateStats(`Error parsing JSON: ${json}`);
+            return;
+        }
         if (json.continue_token) {
             continue_token = json.continue_token;
         } else {
@@ -287,7 +296,7 @@ chrome.storage.sync.get(['customapikey'], data => {
     if (typeof data.customapikey === 'undefined'){
         const defaultkeys = [
             '5DA40A4A4699DEE30C1C9A7BCE84C914',
-      		'5970533AA2A0651E9105E706D0F8EDDC',
+            '5970533AA2A0651E9105E706D0F8EDDC',
             '2B3382EBA9E8C1B58054BD5C5EE1C36A',
         ];
         apikey = defaultkeys[Math.floor(Math.random() * 3)];
