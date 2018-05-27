@@ -13,6 +13,44 @@ const banStats = {
 
 const getSteamID64 = minProfile => '76' + (parseInt(minProfile) + 561197960265728);
 
+const parseTime = (time) => {
+  var timeSecs = 0;
+  if (time.includes(':')) {
+      var i = time.indexOf(':');
+      timeSecs += parseInt(time.substr(0,i))*60;
+      timeSecs += parseInt(time.substr(i+1));
+  } else {
+      timeSecs += parseInt(time);
+  }
+  return timeSecs;
+};
+const timeString = (time) => {
+    var secs = 0;
+    var mins = 0;
+    var hours = 0;
+    for (var i=0;i<time;i++) {
+        secs += 1;
+        if (secs > 59) {
+            secs = 0;
+            mins += 1;
+            if (mins > 59) {
+                mins = 0;
+                hours += 1;
+            }
+        }
+    }
+    return `${twoDigit(hours)}:${twoDigit(mins)}:${twoDigit(secs)}`;
+};
+const twoDigit = (integer) => {
+    var string = integer.toString();
+    if (string.length < 1) {
+        string = '00';
+    } else if (string.length < 2) {
+        string = '0'+string;
+    }
+    return string;
+};
+
 const statusBar = document.createElement('div');
 statusBar.style.margin = '8px 0';
 statusBar.style.whiteSpace = 'pre-wrap';
@@ -53,6 +91,9 @@ const updateStats = () => {
     let totalKills = 0;
     let totalAssists = 0;
     let totalDeaths = 0;
+    let totalWins = 0;
+    let totalWaitTime = 0;
+    let totalTime = 0;
     
     const profileURItrimmed = profileURI.replace(/\/$/, '');
     const myAnchors = document.querySelectorAll(`.inner_name .playerAvatar a[href="${profileURItrimmed}"]`);
@@ -62,13 +103,29 @@ const updateStats = () => {
         totalAssists += parseInt(myMatchStats[3].textContent, 10);
         totalDeaths += parseInt(myMatchStats[4].textContent, 10);
     });
+    const matchData = document.querySelectorAll(`.val_left td`);
+    matchData.forEach(dataEl => {
+        var data = dataEl.innerText.trim();
+        if (data.includes(':')) {
+            var i = data.indexOf(':');
+            var key = data.substr(0,i);
+            var value = data.substr(i+1);
+            if (key == 'Wait Time') {
+                totalWaitTime += parseTime(value);
+            } else if (key == 'Match Duration') {
+                totalTime += parseTime(value);
+            }
+        }
+    });
     funStatsBar.textContent = 'Some fun stats for loaded matches:\n' +
-                              `Number of matches: ${document.querySelectorAll('.val_left').length}\n` +
+                              `Number of matches: ${matchData.length}\n` +
                               `Total kills: ${totalKills}\n` +
                               `Total assists: ${totalAssists}\n` +
                               `Total deaths: ${totalDeaths}\n` + 
                               `K/D: ${(totalKills/totalDeaths).toFixed(3)} | ` + 
-                              `(K+A)/D: ${((totalKills+totalAssists)/totalDeaths).toFixed(3)}`;
+                              `(K+A)/D: ${((totalKills+totalAssists)/totalDeaths).toFixed(3)}\n` +
+                              `Total wait time (hh:mm:ss): ${timeString(totalWaitTime)}\n` +
+                              `Total match time (hh:mm:ss): ${timeString(totalTime)}`;
 }
 
 const formatMatchTables = () => {
