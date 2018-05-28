@@ -258,9 +258,12 @@ const checkBans = (players) => {
                         playerEl.classList.add('banchecker-checked');
                         verdictEl = playerEl.querySelector('.banchecker-bans');
                         if (verdict) {
+                            let daysAfter = daySinceLastMatch - player.DaysSinceLastBan;
                             if (daySinceLastMatch > player.DaysSinceLastBan) {
+                                verdict += '+' + (daysAfter);
                                 verdictEl.style.color = 'red';
                             } else {
+                                verdict += '-' + (Math.abs(daysAfter));
                                 verdictEl.style.color = 'grey';
                             }
                             verdictEl.style.cursor = 'help';
