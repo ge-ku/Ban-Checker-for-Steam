@@ -1,6 +1,7 @@
 let continue_token = null;
 let sessionid = null;
 let profileURI = null;
+let tabURIparam = 'matchhistorycompetitive';
 
 let providedCustomAPIKey = false;
 let apikey = '';
@@ -11,7 +12,43 @@ const banStats = {
     recentBans: 0,
 }
 
+const funStats = {
+    numberOfMatches: 0,
+    totalKills: 0,
+    totalAssists: 0,
+    totalDeaths: 0,
+    totalWins: 0,
+    totalWaitTime: 0,
+    totalTime: 0
+}
+
 const getSteamID64 = minProfile => '76' + (parseInt(minProfile) + 561197960265728);
+
+const parseTime = (time) => {
+  let timeSecs = 0;
+  if (time.includes(':')) {
+      const i = time.indexOf(':');
+      timeSecs += parseInt(time.substr(0,i))*60;
+      timeSecs += parseInt(time.substr(i+1));
+  } else {
+      timeSecs += parseInt(time);
+  }
+  return timeSecs;
+};
+const timeString = (time) => {
+    let secs = time;
+    const days = Math.floor(secs / (24 * 60 * 60));
+    secs %= 86400;
+    const hours = Math.floor(secs / (60 * 60)).toString().padStart(2, '0');
+    secs %= 3600;
+    const mins = Math.floor(secs / 60).toString().padStart(2, '0');
+    secs %= 60;
+    secs = secs.toString().padStart(2, '0');
+
+    let result = `${hours}:${mins}:${secs}`;
+    if (days) result = `${days.toString()}d ${result}`;
+    return result;
+};
 
 const statusBar = document.createElement('div');
 statusBar.style.margin = '8px 0';
@@ -45,30 +82,52 @@ const initVariables = () => {
         updateStatus('Error: g_sessionID was not found');
     }
     sessionid = matchSessionID[1];
+    const tabOnEl = document.querySelector('.tabOn');
+    if (tabOnEl) {
+        tabURIparam = tabOnEl.parentNode.id.split('_').pop();
+    }
 }
 
 const funStatsBar = document.createElement('div');
 funStatsBar.style.whiteSpace = 'pre-wrap';
 const updateStats = () => {
-    let totalKills = 0;
-    let totalAssists = 0;
-    let totalDeaths = 0;
-    
     const profileURItrimmed = profileURI.replace(/\/$/, '');
-    const myAnchors = document.querySelectorAll(`.inner_name .playerAvatar a[href="${profileURItrimmed}"]`);
+    const myAnchors = document.querySelectorAll('.inner_name .playerAvatar ' + 
+                                `a[href="${profileURItrimmed}"]:not(.banchecker-counted)`);
     myAnchors.forEach(anchorEl => {
         myMatchStats = anchorEl.closest('tr').querySelectorAll('td');
-        totalKills += parseInt(myMatchStats[2].textContent, 10);
-        totalAssists += parseInt(myMatchStats[3].textContent, 10);
-        totalDeaths += parseInt(myMatchStats[4].textContent, 10);
+        funStats.totalKills += parseInt(myMatchStats[2].textContent, 10);
+        funStats.totalAssists += parseInt(myMatchStats[3].textContent, 10);
+        funStats.totalDeaths += parseInt(myMatchStats[4].textContent, 10);
+        anchorEl.classList.add('banchecker-counted');
     });
+    const matchesData = document.querySelectorAll('.val_left:not(.banchecker-counted)');
+    funStats.numberOfMatches += matchesData.length;
+    matchesData.forEach(matchData => {
+        matchData.querySelectorAll('td').forEach((dataEl, index) => {
+            if (index < 2) return;
+            const data = dataEl.innerText.trim();
+            if (data.includes(':')) {
+                const i = data.indexOf(':');
+                const value = data.substr(i+1);
+                if (index === 2) {
+                    funStats.totalWaitTime += parseTime(value);
+                } else if (index === 3) {
+                    funStats.totalTime += parseTime(value);
+                }
+            }
+        });
+        matchData.classList.add('banchecker-counted');
+    })
     funStatsBar.textContent = 'Some fun stats for loaded matches:\n' +
-                              `Number of matches: ${document.querySelectorAll('.val_left').length}\n` +
-                              `Total kills: ${totalKills}\n` +
-                              `Total assists: ${totalAssists}\n` +
-                              `Total deaths: ${totalDeaths}\n` + 
-                              `K/D: ${(totalKills/totalDeaths).toFixed(3)} | ` + 
-                              `(K+A)/D: ${((totalKills+totalAssists)/totalDeaths).toFixed(3)}`;
+                              `Number of matches: ${funStats.numberOfMatches}\n` +
+                              `Total kills: ${funStats.totalKills}\n` +
+                              `Total assists: ${funStats.totalAssists}\n` +
+                              `Total deaths: ${funStats.totalDeaths}\n` + 
+                              `K/D: ${(funStats.totalKills/funStats.totalDeaths).toFixed(3)} | ` + 
+                              `(K+A)/D: ${((funStats.totalKills+funStats.totalAssists)/funStats.totalDeaths).toFixed(3)}\n` +
+                              `Total wait time: ${timeString(funStats.totalWaitTime)}\n` +
+                              `Total match time: ${timeString(funStats.totalTime)}`;
 }
 
 const formatMatchTables = () => {
@@ -104,7 +163,7 @@ const formatMatchTables = () => {
 const fetchMatchHistoryPage = (recursively, page) => {
     document.querySelector('#load_more_button').style.display = 'none';
     document.querySelector('#inventory_history_loading').style.display = 'block';
-    fetch (`${profileURI}gcpd/730?ajax=1&tab=matchhistorycompetitive&continue_token=${continue_token}&sessionid=${sessionid}`,
+    fetch (`${profileURI}gcpd/730?ajax=1&tab=${tabURIparam}&continue_token=${continue_token}&sessionid=${sessionid}`,
         {
             credentials: "same-origin"
         })
@@ -336,14 +395,13 @@ chrome.storage.sync.get(['customapikey'], data => {
 
 
 menu.appendChild(statusBar);
-
-//updateStats();
 menu.appendChild(funStatsBar);
 
 document.querySelector('#subtabs').insertAdjacentElement('afterend', menu);
 
 initVariables();
 formatMatchTables();
+updateStats();
 
 const loadMoreButton = document.querySelector('#load_more_button');
 document.querySelector('.load_more_history_area').appendChild(loadMoreButton);
