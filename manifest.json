@@ -39,10 +39,12 @@
     "css": [ "display.css" ],
     "run_at": "document_end",
     "matches": [ 
-      "*://steamcommunity.com/id/*/gcpd/730/?tab=matchhistorycompetitive",
-      "*://steamcommunity.com/profiles/*/gcpd/730/?tab=matchhistorycompetitive",
-      "*://steamcommunity.com/id/*/gcpd/730?tab=matchhistorycompetitive",
-      "*://steamcommunity.com/profiles/*/gcpd/730?tab=matchhistorycompetitive"
+      "*://steamcommunity.com/id/*/gcpd/730*tab=matchhistorycompetitive",
+      "*://steamcommunity.com/profiles/*/gcpd/730*tab=matchhistorycompetitive",
+      "*://steamcommunity.com/id/*/gcpd/730*tab=matchhistorywingman",
+      "*://steamcommunity.com/profiles/*/gcpd/730*tab=matchhistorywingman",
+      "*://steamcommunity.com/id/*/gcpd/730*tab=matchhistoryophydra",
+      "*://steamcommunity.com/profiles/*/gcpd/730*tab=matchhistoryophydra"
     ]
   }
   ],

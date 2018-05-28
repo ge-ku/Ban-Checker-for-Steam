@@ -1,6 +1,7 @@
 let continue_token = null;
 let sessionid = null;
 let profileURI = null;
+let tabURIparam = 'matchhistorycompetitive';
 
 let providedCustomAPIKey = false;
 let apikey = '';
@@ -80,6 +81,10 @@ const initVariables = () => {
         updateStatus('Error: g_sessionID was not found');
     }
     sessionid = matchSessionID[1];
+    const tabOnEl = document.querySelector('.tabOn');
+    if (tabOnEl) {
+        tabURIparam = tabOnEl.parentNode.id.split('_').pop();
+    }
 }
 
 const funStatsBar = document.createElement('div');
