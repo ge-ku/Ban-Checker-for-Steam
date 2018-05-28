@@ -6,7 +6,7 @@
 			"48": "icons/ow48.png",
 			"128": "icons/ow128.png" },
   "permissions": [
-    "storage", "alarms", "*://steamcommunity.com/*", "https://api.steampowered.com/*"
+    "storage", "alarms", "contextMenus", "*://steamcommunity.com/*", "https://api.steampowered.com/*"
   ],
   "optional_permissions": [
     "notifications"
@@ -38,7 +38,7 @@
     "js": [ "options.js", "gcpd730.js" ],
     "css": [ "display.css" ],
     "run_at": "document_end",
-    "matches": [ 
+    "matches": [
       "*://steamcommunity.com/id/*/gcpd/730/?tab=matchhistorycompetitive",
       "*://steamcommunity.com/profiles/*/gcpd/730/?tab=matchhistorycompetitive",
       "*://steamcommunity.com/id/*/gcpd/730?tab=matchhistorycompetitive",
@@ -47,7 +47,7 @@
   }
   ],
   "background": {
-    "scripts": ["history.js"],
+    "scripts": ["history.js", "contextmenus.js"],
     "persistent": false
   },
   "manifest_version": 2
