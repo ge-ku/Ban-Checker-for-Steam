@@ -13,6 +13,7 @@ const banStats = {
 }
 
 const funStats = {
+    numberOfMatches: 0,
     totalKills: 0,
     totalAssists: 0,
     totalDeaths: 0,
@@ -100,23 +101,26 @@ const updateStats = () => {
         funStats.totalDeaths += parseInt(myMatchStats[4].textContent, 10);
         anchorEl.classList.add('banchecker-counted');
     });
-    const matchData = document.querySelectorAll(`.val_left td:not(.banchecker-counted)`);
-    matchData.forEach(dataEl => {
-        const data = dataEl.innerText.trim();
-        if (data.includes(':')) {
-            const i = data.indexOf(':');
-            const key = data.substr(0,i);
-            const value = data.substr(i+1);
-            if (key == 'Wait Time') {
-                funStats.totalWaitTime += parseTime(value);
-            } else if (key == 'Match Duration') {
-                funStats.totalTime += parseTime(value);
+    const matchesData = document.querySelectorAll('.val_left:not(.banchecker-counted)');
+    funStats.numberOfMatches += matchesData.length;
+    matchesData.forEach(matchData => {
+        matchData.querySelectorAll('td').forEach((dataEl, index) => {
+            if (index < 2) return;
+            const data = dataEl.innerText.trim();
+            if (data.includes(':')) {
+                const i = data.indexOf(':');
+                const value = data.substr(i+1);
+                if (index === 2) {
+                    funStats.totalWaitTime += parseTime(value);
+                } else if (index === 3) {
+                    funStats.totalTime += parseTime(value);
+                }
             }
-        }
-        dataEl.classList.add('banchecker-counted');
-    });
+        });
+        matchData.classList.add('banchecker-counted');
+    })
     funStatsBar.textContent = 'Some fun stats for loaded matches:\n' +
-                              `Number of matches: ${document.querySelectorAll('.val_left').length}\n` +
+                              `Number of matches: ${funStats.numberOfMatches}\n` +
                               `Total kills: ${funStats.totalKills}\n` +
                               `Total assists: ${funStats.totalAssists}\n` +
                               `Total deaths: ${funStats.totalDeaths}\n` + 
