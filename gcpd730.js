@@ -3,6 +3,8 @@ let sessionid = null;
 let profileURI = null;
 let tabURIparam = 'matchhistorycompetitive';
 
+const maxRetries = 3;
+
 let providedCustomAPIKey = false;
 let apikey = '';
 
@@ -160,7 +162,7 @@ const formatMatchTables = () => {
     });
 }
 
-const fetchMatchHistoryPage = (recursively, page) => {
+const fetchMatchHistoryPage = (recursively, page, retryCount) => {
     document.querySelector('#load_more_button').style.display = 'none';
     document.querySelector('#inventory_history_loading').style.display = 'block';
     fetch (`${profileURI}gcpd/730?ajax=1&tab=${tabURIparam}&continue_token=${continue_token}&sessionid=${sessionid}`,
@@ -181,8 +183,7 @@ const fetchMatchHistoryPage = (recursively, page) => {
     })
     .then(json => {
         if (!json.success) {
-            updateStats(`Error parsing JSON: ${json}`);
-            return;
+            throw Error(`error parsing JSON:\n${JSON.stringify(json)}`);
         }
         if (json.continue_token) {
             continue_token = json.continue_token;
@@ -199,16 +200,24 @@ const fetchMatchHistoryPage = (recursively, page) => {
         formatMatchTables();
         if (recursively && continue_token) {
             updateStatus(`Loaded ${page ? page + 1 : 1} page${page ? 's' : ''}...`);
-            fetchMatchHistoryPage(true, page ? page + 1 : 1);
-        } else if (!continue_token) {
-            document.querySelector('#inventory_history_loading').style.display = 'none';
+            fetchMatchHistoryPage(true, page ? page + 1 : 1, maxRetries);
         } else {
-            document.querySelector('#load_more_button').style.display = 'inline-block';
-            document.querySelector('#inventory_history_loading').style.display = 'none';
+            updateStatus('');
+            if (!continue_token) {
+                document.querySelector('#inventory_history_loading').style.display = 'none';
+            } else {
+                document.querySelector('#load_more_button').style.display = 'inline-block';
+                document.querySelector('#inventory_history_loading').style.display = 'none';
+            }
         }
     })
     .catch((error) => {
-        updateStatus(`Error while loading match history: ${error}`);
+        updateStatus(`Error while loading match history:\n${error}` + 
+                     `${retryCount !== undefined && retryCount > 0 ? `\n\nRetrying to fetch page... ${maxRetries - retryCount}/3` 
+                                                                   : `\n\nCouldn't load data after ${maxRetries} retries :(`}`);
+        if (retryCount > 0) {
+            fetchMatchHistoryPage(true, page, retryCount - 1);
+        }
         document.querySelector('#load_more_button').style.display = 'inline-block';
         document.querySelector('#inventory_history_loading').style.display = 'none';
     })
@@ -216,9 +225,9 @@ const fetchMatchHistoryPage = (recursively, page) => {
 
 const fetchMatchHistory = () => {
     if (continue_token && sessionid && profileURI) {
-        console.log(`Continue token: ${continue_token} | SessionID: ${sessionid} | Profile: ${profileURI}`);
+        console.log(`First continue token: ${continue_token} | SessionID: ${sessionid} | Profile: ${profileURI}`);
         updateStatus('Loading Match history...')
-        fetchMatchHistoryPage(true);
+        fetchMatchHistoryPage(true, 1, maxRetries);
     }
 }
 
@@ -409,7 +418,7 @@ updateStats();
 const loadMoreButton = document.querySelector('#load_more_button');
 document.querySelector('.load_more_history_area').appendChild(loadMoreButton);
 document.querySelector('.load_more_history_area a').remove();
-loadMoreButton.onclick = () => fetchMatchHistoryPage();
+loadMoreButton.onclick = () => fetchMatchHistoryPage(false, null, maxRetries);
 
 
 // embed settings
