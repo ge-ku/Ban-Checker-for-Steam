@@ -265,21 +265,26 @@ const checkBans = (players) => {
                         banStats.vacBans++;
                     }
                     if (player.NumberOfGameBans > 0) {
-                        if (verdict) verdict += ' & ';
+                        if (verdict) verdict += ' &\n';
                         verdict += 'Game';
                         banStats.gameBans++;
                     }
-                    if (verdict && daySinceLastMatch > player.DaysSinceLastBan) banStats.recentBans++;
+                    if (verdict) {
+                        const daysAfter = daySinceLastMatch - player.DaysSinceLastBan;
+                        if (daySinceLastMatch > player.DaysSinceLastBan) {
+                            banStats.recentBans++;
+                            verdict += '+' + daysAfter;
+                        } else {
+                            verdict += daysAfter;
+                        }
+                    }
                     playerEls.forEach(playerEl => {
                         playerEl.classList.add('banchecker-checked');
                         verdictEl = playerEl.querySelector('.banchecker-bans');
                         if (verdict) {
-                            let daysAfter = daySinceLastMatch - player.DaysSinceLastBan;
                             if (daySinceLastMatch > player.DaysSinceLastBan) {
-                                verdict += '+' + (daysAfter);
                                 verdictEl.style.color = 'red';
                             } else {
-                                verdict += '-' + (Math.abs(daysAfter));
                                 verdictEl.style.color = 'grey';
                             }
                             verdictEl.style.cursor = 'help';
@@ -324,6 +329,7 @@ const checkLoadedMatchesForBans = () => {
             if (i === 0) {
                 const bansHeader = document.createElement('th');
                 bansHeader.textContent = 'Bans';
+                bansHeader.style.minWidth = '5.6em';
                 tr.appendChild(bansHeader);
             } else if (tr.childElementCount > 3) {
                 const bansPlaceholder = document.createElement('td');
