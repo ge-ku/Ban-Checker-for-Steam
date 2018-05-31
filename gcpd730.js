@@ -178,7 +178,7 @@ const fetchMatchHistoryPage = (recursively, page, retryCount) => {
                 return res.text();
             }
         } else {
-            throw Error(res.statusText);
+            throw Error(`Code ${res.status}. ${res.statusText}`);
         }
     })
     .then(json => {
@@ -216,7 +216,7 @@ const fetchMatchHistoryPage = (recursively, page, retryCount) => {
                      `${retryCount !== undefined && retryCount > 0 ? `\n\nRetrying to fetch page... ${maxRetries - retryCount}/3` 
                                                                    : `\n\nCouldn't load data after ${maxRetries} retries :(`}`);
         if (retryCount > 0) {
-            fetchMatchHistoryPage(true, page, retryCount - 1);
+            setTimeout(() => fetchMatchHistoryPage(true, page, retryCount - 1), 3000);
         }
         document.querySelector('#load_more_button').style.display = 'inline-block';
         document.querySelector('#inventory_history_loading').style.display = 'none';
@@ -226,7 +226,7 @@ const fetchMatchHistoryPage = (recursively, page, retryCount) => {
 const fetchMatchHistory = () => {
     if (continue_token && sessionid && profileURI) {
         console.log(`First continue token: ${continue_token} | SessionID: ${sessionid} | Profile: ${profileURI}`);
-        updateStatus('Loading Match history...')
+        updateStatus('Loading Match history...');
         fetchMatchHistoryPage(true, 1, maxRetries);
     }
 }
@@ -242,12 +242,19 @@ const checkBans = (players) => {
         }
         return arr;
     }, []);
-    updateStatus(`Loaded unchecked matches contain ${uniquePlayers.length} players.\n` + 
+    const fetchBatch = (i, retryCount) => {
+        updateStatus(`Loaded unchecked matches contain ${uniquePlayers.length} players.\n` + 
                  `We can scan 100 players at a time so we're sending ${batches.length} ` +
-                 `request${batches.length > 1 ? 's' : ''}.`);
-    const fetchBatch = (i) => {
+                 `request${batches.length > 1 ? 's' : ''}.\n` +
+                 `${i} successful request${i === 1 ? '': 's'} so far...`);
         fetch(`https://api.steampowered.com/ISteamUser/GetPlayerBans/v1/?key=${apikey}&steamids=${batches[i].join(',')}`)
-            .then(res => res.json())
+            .then(res => {
+                if (res.ok) {
+                    return res.json();
+                } else {
+                    throw Error(`Code ${res.status}. ${res.statusText}`);
+                }
+            })
             .then(json => {
                 json.players.forEach(player => {
                     const playerEls = document.querySelectorAll(`tr[data-steamid64="${player.SteamId}"]`);
@@ -297,8 +304,16 @@ const checkBans = (players) => {
                                 `\n\nHover over ban status to check how many days have passed since last ban.`);
                 }
             })
+            .catch((error) => {
+                updateStatus(`Error while scanning players for bans:\n${error}` + 
+                `${retryCount !== undefined && retryCount > 0 ? `\n\nRetrying to scan... ${maxRetries - retryCount}/3` 
+                                                              : `\n\nCouldn't scan for bans after ${maxRetries} retries :(`}`);
+                if (retryCount > 0) {
+                    setTimeout(() => fetchBatch(i, retryCount - 1), 3000);
+                }
+            });
     }
-    fetchBatch(0);
+    fetchBatch(0, maxRetries);
 }
 
 const checkLoadedMatchesForBans = () => {
