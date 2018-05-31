@@ -183,7 +183,8 @@ const fetchMatchHistoryPage = (recursively, page, retryCount) => {
     })
     .then(json => {
         if (!json.success) {
-            throw Error(`error parsing JSON:\n${JSON.stringify(json)}`);
+            throw Error('error getting valid JSON in response to\n' + 
+                        `${profileURI}gcpd/730?ajax=1&tab=${tabURIparam}&continue_token=${continue_token}&sessionid=${sessionid}`);
         }
         if (json.continue_token) {
             continue_token = json.continue_token;
