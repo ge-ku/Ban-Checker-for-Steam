@@ -18,7 +18,7 @@ statusBar.style.margin = '8px 0';
 statusBar.style.whiteSpace = 'pre-wrap';
 const updateStatus = (text, accumulate) => {
     if (accumulate) {
-        statusBar.textContent = statusBar.textContent + '\n' + text; 
+        statusBar.textContent = statusBar.textContent + '\n' + text;
     } else {
         statusBar.textContent = text;
     }
@@ -53,7 +53,7 @@ const updateStats = () => {
     let totalKills = 0;
     let totalAssists = 0;
     let totalDeaths = 0;
-    
+
     const profileURItrimmed = profileURI.replace(/\/$/, '');
     const myAnchors = document.querySelectorAll(`.inner_name .playerAvatar a[href="${profileURItrimmed}"]`);
     myAnchors.forEach(anchorEl => {
@@ -66,8 +66,8 @@ const updateStats = () => {
                               `Number of matches: ${document.querySelectorAll('.val_left').length}\n` +
                               `Total kills: ${totalKills}\n` +
                               `Total assists: ${totalAssists}\n` +
-                              `Total deaths: ${totalDeaths}\n` + 
-                              `K/D: ${(totalKills/totalDeaths).toFixed(3)} | ` + 
+                              `Total deaths: ${totalDeaths}\n` +
+                              `K/D: ${(totalKills/totalDeaths).toFixed(3)} | ` +
                               `(K+A)/D: ${((totalKills+totalAssists)/totalDeaths).toFixed(3)}`;
 }
 
@@ -174,7 +174,7 @@ const checkBans = (players) => {
         }
         return arr;
     }, []);
-    updateStatus(`Loaded unchecked matches contain ${uniquePlayers.length} players.\n` + 
+    updateStatus(`Loaded unchecked matches contain ${uniquePlayers.length} players.\n` +
                  `We can scan 100 players at a time so we're sending ${batches.length} ` +
                  `request${batches.length > 1 ? 's' : ''}.`);
     const fetchBatch = (i) => {
@@ -218,9 +218,9 @@ const checkBans = (players) => {
                 else if (batches.length > i+1 && !providedCustomAPIKey) {
                     updateStatus('You did not provide your own Steam API key, only 100 players were scanned!', true);
                 } else {
-                    updateStatus(`Looks like we're done.\n\n` + 
-                                `There were ${banStats.recentBans} players who got banned after playing with you!\n\n` + 
-                                `Total ban stats: ${banStats.vacBans} VAC banned and ${banStats.gameBans} ` + 
+                    updateStatus(`Looks like we're done.\n\n` +
+                                `There were ${banStats.recentBans} players who got banned after playing with you!\n\n` +
+                                `Total ban stats: ${banStats.vacBans} VAC banned and ${banStats.gameBans} ` +
                                 `Game banned players in games we scanned (a lot of these could happen outside of CS:GO.)\n` +
                                 `Total amount of unique players encountered: ${uniquePlayers.length}` +
                                 `\n\nHover over ban status to check how many days have passed since last ban.`);
