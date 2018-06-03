@@ -1,4 +1,4 @@
-var context_api, tabs_api;
+let context_api, tabs_api;
 if (chrome) {
   context_api = chrome.contextMenus;
   tabs_api = chrome.tabs;
@@ -13,7 +13,8 @@ const actions = {
   'csgo-matches': 'https://steamcommunity.com/my/gcpd/730?tab=matchhistorycompetitive',
   'community-friends': 'https://steamcommunity.com/my/friends/',
   'community-groups': 'https://steamcommunity.com/my/groups/',
-  'github': 'https://github.com/ge-ku/Ban-Checker-for-Steam'
+  'github': 'https://github.com/ge-ku/Ban-Checker-for-Steam',
+  'community-recently': 'https://steamcommunity.com/my/friends/coplay/'
 };
 const context_listener = (info, tab) => {
   if (info.menuItemId in actions) {
@@ -22,19 +23,24 @@ const context_listener = (info, tab) => {
 };
 const context_defs = [
   {
-    id: 'csgo-matches',
-    type: 'normal',
-    title: 'Csgo match history'
-  },
-  {
     id: 'community-friends',
     type: 'normal',
-    title: 'Steam friends'
+    title: 'Steam Friends'
   },
   {
     id: 'community-groups',
     type: 'normal',
-    title: 'Steam groups'
+    title: 'Steam Groups'
+  },
+  {
+    id: 'community-recently',
+    type: 'normal',
+    title: 'Recently Played With'
+  },
+  {
+    id: 'csgo-matches',
+    type: 'normal',
+    title: 'CS:GO match history'
   },
   {
     id: 'separator-1',

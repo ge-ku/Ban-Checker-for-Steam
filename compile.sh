@@ -9,23 +9,10 @@
 VERSION=$(grep '"version":' manifest.json | sed 's/^.*: //;s/"//g' | tr -d ',\r\n');
 echo "Ban Checker version in manifest.json: $VERSION. This script will minify javascript using Closure Compiler and pack everything into Banchecker_Chrome_${VERSION}.zip and Banchecker_Firefox_${VERSION}.zip";
 
-echo "Creating temp folder that will hold minified scripts, it'll be deleted in the end...";
+echo "Creating temp folder that will hold files, it'll be deleted in the end...";
 mkdir temp;
 
-echo "Minifying js files (besides jquery) using Closure Compiler...";
-for jsfile in *.js; do
-	if [ ! "$jsfile" = "jquery.min.js" ] ; then
-		echo "--minifying $jsfile...";
-		curl -s \
-		  -d compilation_level=SIMPLE_OPTIMIZATIONS \
-		  -d output_format=text \
-		  -d output_info=compiled_code \
-		  -d charset=utf-8 \
-		  --data-urlencode "js_code@$jsfile" \
-		  closure-compiler.appspot.com/compile \
-		  -o "temp/$jsfile"
-	fi
-done
+cp *.js temp;
 
 echo "Moving all other files into temp folder...";
 cp -a icons temp/icons;
