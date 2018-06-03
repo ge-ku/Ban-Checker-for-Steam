@@ -93,6 +93,7 @@ const initVariables = () => {
 const funStatsBar = document.createElement('div');
 funStatsBar.style.whiteSpace = 'pre-wrap';
 const updateStats = () => {
+    if (tabURIparam === 'playerreports' || tabURIparam === 'playercommends') return;
     const profileURItrimmed = profileURI.replace(/\/$/, '');
     const myAnchors = document.querySelectorAll('.inner_name .playerAvatar ' + 
                                 `a[href="${profileURItrimmed}"]:not(.banchecker-counted)`);
@@ -133,9 +134,8 @@ const updateStats = () => {
 }
 
 const formatMatchTables = () => {
-    document.querySelectorAll('.csgo_scoreboard_inner_right:not(.banchecker-formatted)').forEach(table => {
-        const leftColumn = table.parentElement.parentElement.querySelector('.csgo_scoreboard_inner_left');
-        const matchDate = leftColumn.textContent.match(/(20\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)/);
+    const daysSince = (dateString) => {
+        const matchDate = dateString.match(/(20\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)/);
         let daysSinceMatch = -1;
         if (matchDate.length > 6) {
             const year = parseInt(matchDate[1], 10);
@@ -150,16 +150,33 @@ const formatMatchTables = () => {
             const timePassed = currentTime - matchDayTime;
             daysSinceMatch = Math.ceil(timePassed / (1000 * 60 * 60 * 24));
         }
-        table.querySelectorAll('tbody > tr').forEach((tr, i) => {
-            if (i === 0 || tr.childElementCount < 3) return;
-            const minProfile = tr.querySelector('.linkTitle').dataset.miniprofile;
-            const steamID64 = getSteamID64(minProfile);
-            tr.dataset.steamid64 = steamID64;
-            tr.dataset.dayssince = daysSinceMatch;
-            tr.classList.add('banchecker-profile');
+        return daysSinceMatch;
+    }
+    if (tabURIparam === 'playerreports' || tabURIparam === 'playercommends') {
+        document.querySelectorAll('.generic_kv_table > tbody > tr:not(:first-child):not(.banchecker-profile)').forEach(report => {
+            const dateEl = report.querySelector('td:first-child');
+            const daysSinceMatch = daysSince(dateEl.textContent);
+            const minProfile = report.querySelector('.linkTitle').dataset.miniprofile;
+            report.dataset.steamid64 = getSteamID64(minProfile);
+            report.dataset.dayssince = daysSinceMatch;
+            report.classList.add('banchecker-profile');
+            report.classList.add('banchecker-formatted');
         });
-        table.classList.add('banchecker-formatted');
-    });
+    } else {
+        document.querySelectorAll('.csgo_scoreboard_inner_right:not(.banchecker-formatted)').forEach(table => {
+            const leftColumn = table.parentElement.parentElement.querySelector('.csgo_scoreboard_inner_left');
+            const daysSinceMatch = daysSince(leftColumn.textContent);
+            table.querySelectorAll('tbody > tr').forEach((tr, i) => {
+                if (i === 0 || tr.childElementCount < 3) return;
+                const minProfile = tr.querySelector('.linkTitle').dataset.miniprofile;
+                const steamID64 = getSteamID64(minProfile);
+                tr.dataset.steamid64 = steamID64;
+                tr.dataset.dayssince = daysSinceMatch;
+                tr.classList.add('banchecker-profile');
+            });
+            table.classList.add('banchecker-formatted');
+        });
+    }
 }
 
 const fetchMatchHistoryPage = (recursively, page, retryCount) => {
@@ -167,7 +184,7 @@ const fetchMatchHistoryPage = (recursively, page, retryCount) => {
     document.querySelector('#inventory_history_loading').style.display = 'block';
     fetch (`${profileURI}gcpd/730?ajax=1&tab=${tabURIparam}&continue_token=${continue_token}&sessionid=${sessionid}`,
         {
-            credentials: "same-origin"
+            credentials: "include"
         })
     .then(res => {
         if (res.ok) {
@@ -194,8 +211,14 @@ const fetchMatchHistoryPage = (recursively, page, retryCount) => {
         }
         const parser = new DOMParser(); // todo: don't create new parser for each request
         const newData = parser.parseFromString(json.html, 'text/html');
-        newData.querySelectorAll('.csgo_scoreboard_root > tbody > tr').forEach((tr, i) => {
-            if (i > 0) document.querySelector('.csgo_scoreboard_root').appendChild(tr);
+        let elementsToAppend = '.csgo_scoreboard_root > tbody > tr';
+        let elementToAppendTo = '.csgo_scoreboard_root';
+        if (tabURIparam === 'playerreports' || tabURIparam === 'playercommends') {
+            elementsToAppend = 'tbody > tr';
+            elementToAppendTo = '.generic_kv_table tbody';
+        }
+        newData.querySelectorAll(elementsToAppend).forEach((tr, i) => {
+            if (i > 0) document.querySelector(elementToAppendTo).appendChild(tr);
         })
         updateStats();
         formatMatchTables();
@@ -323,26 +346,44 @@ const checkBans = (players) => {
 }
 
 const checkLoadedMatchesForBans = () => {
-    const tables = document.querySelectorAll('.banchecker-formatted:not(.banchecker-withcolumn)');
-    tables.forEach(table => {
-        table.classList.add('banchecker-withcolumn');
-        table.querySelectorAll('tr').forEach((tr, i) => {
-            if (i === 0) {
-                const bansHeader = document.createElement('th');
-                bansHeader.textContent = 'Bans';
-                bansHeader.style.minWidth = '5.6em';
-                tr.appendChild(bansHeader);
-            } else if (tr.childElementCount > 3) {
-                const bansPlaceholder = document.createElement('td');
-                bansPlaceholder.classList.add('banchecker-bans');
-                bansPlaceholder.textContent = '?';
-                tr.appendChild(bansPlaceholder);
-            } else {
-                const scoreboard = tr.querySelector('td');
-                if (scoreboard) scoreboard.setAttribute('colspan', '9');
-            }
-        });;
-    })
+    if (tabURIparam === 'playerreports' || tabURIparam === 'playercommends') {
+        const tableHeader = document.querySelector('.generic_kv_table > tbody > tr:first-child');
+        if (!tableHeader.classList.contains('banchecker-withcolumn')) {
+            tableHeader.classList.add('banchecker-withcolumn');
+            const bansHeader = document.createElement('th');
+            bansHeader.textContent = 'Ban';
+            tableHeader.appendChild(bansHeader);
+        }
+        const uncheckedPlayers = document.querySelectorAll('.generic_kv_table > tbody > tr:not(.banchecker-withcolumn)');
+        uncheckedPlayers.forEach(tr => {
+            tr.classList.add('banchecker-withcolumn');
+            const bansPlaceholder = document.createElement('td');
+            bansPlaceholder.classList.add('banchecker-bans');
+            bansPlaceholder.textContent = '?';
+            tr.appendChild(bansPlaceholder);
+        });
+    } else {
+        const tables = document.querySelectorAll('.banchecker-formatted:not(.banchecker-withcolumn)');
+        tables.forEach(table => {
+            table.classList.add('banchecker-withcolumn');
+            table.querySelectorAll('tr').forEach((tr, i) => {
+                if (i === 0) {
+                    const bansHeader = document.createElement('th');
+                    bansHeader.textContent = 'Bans';
+                    bansHeader.style.minWidth = '5.6em';
+                    tr.appendChild(bansHeader);
+                } else if (tr.childElementCount > 3) {
+                    const bansPlaceholder = document.createElement('td');
+                    bansPlaceholder.classList.add('banchecker-bans');
+                    bansPlaceholder.textContent = '?';
+                    tr.appendChild(bansPlaceholder);
+                } else {
+                    const scoreboard = tr.querySelector('td');
+                    if (scoreboard) scoreboard.setAttribute('colspan', '9');
+                }
+            });;
+        })
+    }
     const playersEl = document.querySelectorAll('.banchecker-profile:not(.banchecker-checked):not(.banchecker-checking)');
     let playersArr = [];
     playersEl.forEach(player => {
