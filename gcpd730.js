@@ -88,18 +88,20 @@ const initVariables = () => {
     if (tabOnEl) {
         tabURIparam = tabOnEl.parentNode.id.split('_').pop();
     }
+    if (typeof content !== 'undefined') fetch = content.fetch; // fix for Firefox with disabled third-party cookies
 }
 
 const funStatsBar = document.createElement('div');
 funStatsBar.style.whiteSpace = 'pre-wrap';
-funStatsBar.style.backgroundColor = '#111923';
+funStatsBar.style.backgroundColor = 'rgba(17, 25, 35, .9)';
 funStatsBar.style.borderRadius = '5px';
 funStatsBar.style.border = '1px solid #000';
 funStatsBar.style.padding = '14px';
 funStatsBar.style.position = 'fixed';
 funStatsBar.style.left = '0';
 funStatsBar.style.bottom = '0';
-funStatsBar.style.margin = '4px'
+funStatsBar.style.margin = '4px';
+funStatsBar.style.zIndex = '9';
 const updateStats = () => {
     if (tabURIparam === 'playerreports' || tabURIparam === 'playercommends') return;
     const profileURItrimmed = profileURI.replace(/\/$/, '');
