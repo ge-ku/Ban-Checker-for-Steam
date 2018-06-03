@@ -57,7 +57,7 @@ statusBar.style.margin = '8px 0';
 statusBar.style.whiteSpace = 'pre-wrap';
 const updateStatus = (text, accumulate) => {
     if (accumulate) {
-        statusBar.textContent = statusBar.textContent + '\n' + text; 
+        statusBar.textContent = statusBar.textContent + '\n' + text;
     } else {
         statusBar.textContent = text;
     }
@@ -92,10 +92,18 @@ const initVariables = () => {
 
 const funStatsBar = document.createElement('div');
 funStatsBar.style.whiteSpace = 'pre-wrap';
+funStatsBar.style.backgroundColor = '#111923';
+funStatsBar.style.borderRadius = '5px';
+funStatsBar.style.border = '1px solid #000';
+funStatsBar.style.padding = '14px';
+funStatsBar.style.position = 'fixed';
+funStatsBar.style.left = '0';
+funStatsBar.style.bottom = '0';
+funStatsBar.style.margin = '4px'
 const updateStats = () => {
     if (tabURIparam === 'playerreports' || tabURIparam === 'playercommends') return;
     const profileURItrimmed = profileURI.replace(/\/$/, '');
-    const myAnchors = document.querySelectorAll('.inner_name .playerAvatar ' + 
+    const myAnchors = document.querySelectorAll('.inner_name .playerAvatar ' +
                                 `a[href="${profileURItrimmed}"]:not(.banchecker-counted)`);
     myAnchors.forEach(anchorEl => {
         myMatchStats = anchorEl.closest('tr').querySelectorAll('td');
@@ -126,8 +134,8 @@ const updateStats = () => {
                               `Number of matches: ${funStats.numberOfMatches}\n` +
                               `Total kills: ${funStats.totalKills}\n` +
                               `Total assists: ${funStats.totalAssists}\n` +
-                              `Total deaths: ${funStats.totalDeaths}\n` + 
-                              `K/D: ${(funStats.totalKills/funStats.totalDeaths).toFixed(3)} | ` + 
+                              `Total deaths: ${funStats.totalDeaths}\n` +
+                              `K/D: ${(funStats.totalKills/funStats.totalDeaths).toFixed(3)} | ` +
                               `(K+A)/D: ${((funStats.totalKills+funStats.totalAssists)/funStats.totalDeaths).toFixed(3)}\n` +
                               `Total wait time: ${timeString(funStats.totalWaitTime)}\n` +
                               `Total match time: ${timeString(funStats.totalTime)}`;
@@ -200,7 +208,7 @@ const fetchMatchHistoryPage = (recursively, page, retryCount) => {
     })
     .then(json => {
         if (!json.success) {
-            throw Error('error getting valid JSON in response to\n' + 
+            throw Error('error getting valid JSON in response to\n' +
                         `${profileURI}gcpd/730?ajax=1&tab=${tabURIparam}&continue_token=${continue_token}&sessionid=${sessionid}`);
         }
         if (json.continue_token) {
@@ -236,8 +244,8 @@ const fetchMatchHistoryPage = (recursively, page, retryCount) => {
         }
     })
     .catch((error) => {
-        updateStatus(`Error while loading match history:\n${error}` + 
-                     `${retryCount !== undefined && retryCount > 0 ? `\n\nRetrying to fetch page... ${maxRetries - retryCount}/3` 
+        updateStatus(`Error while loading match history:\n${error}` +
+                     `${retryCount !== undefined && retryCount > 0 ? `\n\nRetrying to fetch page... ${maxRetries - retryCount}/3`
                                                                    : `\n\nCouldn't load data after ${maxRetries} retries :(`}`);
         if (retryCount > 0) {
             setTimeout(() => fetchMatchHistoryPage(true, page, retryCount - 1), 3000);
@@ -267,7 +275,7 @@ const checkBans = (players) => {
         return arr;
     }, []);
     const fetchBatch = (i, retryCount) => {
-        updateStatus(`Loaded unchecked matches contain ${uniquePlayers.length} players.\n` + 
+        updateStatus(`Loaded unchecked matches contain ${uniquePlayers.length} players.\n` +
                  `We can scan 100 players at a time so we're sending ${batches.length} ` +
                  `request${batches.length > 1 ? 's' : ''}.\n` +
                  `${i} successful request${i === 1 ? '': 's'} so far...`);
@@ -325,17 +333,17 @@ const checkBans = (players) => {
                 else if (batches.length > i+1 && !providedCustomAPIKey) {
                     updateStatus('You did not provide your own Steam API key, only 100 players were scanned!', true);
                 } else {
-                    updateStatus(`Looks like we're done.\n\n` + 
-                                `There were ${banStats.recentBans} players who got banned after playing with you!\n\n` + 
-                                `Total ban stats: ${banStats.vacBans} VAC banned and ${banStats.gameBans} ` + 
+                    updateStatus(`Looks like we're done.\n\n` +
+                                `There were ${banStats.recentBans} players who got banned after playing with you!\n\n` +
+                                `Total ban stats: ${banStats.vacBans} VAC banned and ${banStats.gameBans} ` +
                                 `Game banned players in games we scanned (a lot of these could happen outside of CS:GO.)\n` +
                                 `Total amount of unique players encountered: ${uniquePlayers.length}` +
                                 `\n\nHover over ban status to check how many days have passed since last ban.`);
                 }
             })
             .catch((error) => {
-                updateStatus(`Error while scanning players for bans:\n${error}` + 
-                `${retryCount !== undefined && retryCount > 0 ? `\n\nRetrying to scan... ${maxRetries - retryCount}/3` 
+                updateStatus(`Error while scanning players for bans:\n${error}` +
+                `${retryCount !== undefined && retryCount > 0 ? `\n\nRetrying to scan... ${maxRetries - retryCount}/3`
                                                               : `\n\nCouldn't scan for bans after ${maxRetries} retries :(`}`);
                 if (retryCount > 0) {
                     setTimeout(() => fetchBatch(i, retryCount - 1), 3000);
