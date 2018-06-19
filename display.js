@@ -11,6 +11,22 @@ banCheckerButtonText.appendChild(document.createTextNode('Ban Checker'));
 banCheckerButtonText.className = 'title';
 banCheckerButton.appendChild(banCheckerButtonText);
 
+window.onpopstate = (event) => {
+  if (event.state.banchecker) {
+    renderBanCheker();
+    document.querySelector('.friends_nav .active').classList.remove('active');
+    document.querySelector('.friends_nav .banchecker').classList.add('active');
+  };
+}
+
+banCheckerButton.addEventListener('click', (e) => {
+  document.querySelector('.friends_nav .active').classList.remove('active');
+  document.querySelector('.friends_nav .banchecker').classList.add('active');
+  history.pushState({banchecker: true}, 'Ban Checker', '/id/geku/friends/banchecker');
+  e.preventDefault();
+  renderBanCheker();
+});
+
 // TODO: Add button to mobile view
 // document.querySelector('.friends_nav').appendChild(banCheckerButtonText);
 
@@ -163,7 +179,7 @@ function createGameElement(game) {
   gameBody.appendChild(gameInfo);
 
   playersBody = document.createElement('div');
-  playersBody.className = 'responsive_friendblocks';
+  playersBody.className = 'profile_friends responsive_friendblocks';
 
   game.players.forEach(function (player) {
     playersBody.appendChild(createPlayerElement(player));
@@ -277,7 +293,10 @@ function applyFilter() {
 
 // This function prepares UI, it's called only from /banchecker page
 function renderBanCheker() {
-  document.querySelector('#subpage_container').innerHTML = '';
+  var subpage_container = document.querySelector('#subpage_container');
+  while (subpage_container.firstChild) {
+    subpage_container.removeChild(subpage_container.firstChild);
+  }
   
   var container = document.createElement('div');
   container.id = 'friends_coplay_ctn';
@@ -294,7 +313,6 @@ function renderBanCheker() {
   historyContainer.id = 'friends_list';
   container.appendChild(titleContainer);
   container.appendChild(historyContainer);
-
 
   var extensionInfo = document.createElement('div');
   extensionInfo.style.paddingBottom = "1.5em";
