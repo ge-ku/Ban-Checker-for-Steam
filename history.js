@@ -13,18 +13,11 @@ function Game(time, appid, players) {
   this.lastScanTime = 0;
 }
 
-function Player(miniprofile, name, ban) {
+function Player(miniprofile, steamid, name, ban) {
   this.miniprofile = miniprofile; // miniprofile can be converted to steamid64 by adding 76561197960265728
   this.name = name; // Name when recorded
   this.bannedAfterRecording = ban; // true or false
-  this.steamid = playerSteamID64(miniprofile);
-}
-
-function playerSteamID64(miniprofile) {
-  // We can't just add these numbers because of JS limitations (see Number.MAX_SAFE_INTEGER)
-  // Steam IDs are in ascending order so we should be fine by doing this little hack without
-  // worrying too much. In any case we're storing correct miniprofile and can update this if needed.
-  return "76" + (parseInt(miniprofile) + 561197960265728);
+  this.steamid = steamid;
 }
 
 function gameTimeStamp(steamTime) {
@@ -60,10 +53,9 @@ function gameTimeStamp(steamTime) {
   }
 }
 
-// Steam allows us to see last 14 days, we'll terminate loop if we find one already recorded game
-function scanPage(pageNumber, gamesArray, pagesAvailable) {
+function scanPage(gamesArray) {
   var thisPageHasOldGames = false;
-  fetch("http://steamcommunity.com/my/friends/coplay/?p=" + pageNumber + "&l=en", {
+  fetch("https://steamcommunity.com/my/friends/recent?l=english", {
     credentials: 'include'
   })
   .then((response) => response.text())
@@ -73,20 +65,21 @@ function scanPage(pageNumber, gamesArray, pagesAvailable) {
     htmlDOM.querySelectorAll(".coplayGroup").forEach(function(coplayGroup){
       var gameTime = gameTimeStamp(coplayGroup.querySelector(".gameListRowItem").textContent);
       if (gameTime <= lastRecordedGameTime) {
-        thisPageHasOldGames = true; // this page contains a game that was already recorded, marking it so we don't scan all pages after it
+        thisPageHasOldGames = true; // this game must have been scanned already, skipping
         return;
       } else {
         var steamAppLink = coplayGroup.querySelector(".gameLogo > a").getAttribute("href");
-        var steamAppID = steamAppLink.substring(steamAppLink.lastIndexOf("/") + 1, steamAppLink.length); //Game.appid
+        var steamAppID = steamAppLink.substring(steamAppLink.lastIndexOf("/") + 1, steamAppLink.length); // Game.appid
         var players = []; // Game.players
 
-        coplayGroup.querySelectorAll('.friendBlock').forEach(function(playerBlock) {
-          var miniprofile = playerBlock.getAttribute("data-miniprofile");
+        coplayGroup.querySelectorAll('.persona').forEach(function(playerBlock) {
+          var miniprofile = playerBlock.dataset.miniprofile;
+          var steamid = playerBlock.dataset.steamid;
           var name = playerBlock.querySelector(":nth-child(4)").firstChild.nodeValue.trim();
           if (players.filter(e => e.miniprofile == miniprofile).length == 0) {
             // Sometimes if player reconnected during a match he is shown twice in
             // recently played page, we add only unique ones
-            players.push(new Player(miniprofile, name, false));
+            players.push(new Player(miniprofile, steamid, name, false));
           }
         });
 
@@ -95,33 +88,8 @@ function scanPage(pageNumber, gamesArray, pagesAvailable) {
       }
 
     });
-    console.log("Page " + pageNumber + " scanned.");
-    if (pageNumber < pagesAvailable && !thisPageHasOldGames) {
-      scanPage(pageNumber + 1, gamesArray, pagesAvailable);
-    } else {
-      if (thisPageHasOldGames) console.log ("This page contained one or more games that were already scanned, no need to scan next pages.")
-      console.log("All pages were scanned, now saving everything to storage.");
-      doneScanning(gamesArray);
-    }
-  });
-}
-
-function pagesToScan (gamesArray) {
-  fetch("http://steamcommunity.com/my/friends/coplay?l=en", {
-    credentials: 'include'
-  })
-  .then((response) => response.text())
-  .then(function(htmlString) {
-    var parser = new DOMParser();
-    htmlDOM = parser.parseFromString(htmlString, "text/html");
-    if (htmlDOM.querySelector(".pagingPageLink") == undefined) {
-      pagesAvailable = 1;
-    } else {
-      var pagination = htmlDOM.querySelectorAll(".pagingPageLink");
-      pagesAvailable = pagination[pagination.length-1].text;
-    }
-    console.log("Starting to scan pages. " + pagesAvailable + " pages available.");
-    scanPage (1, gamesArray, pagesAvailable);
+    console.log("Page scanned.");
+    doneScanning(gamesArray);
   });
 }
 
@@ -156,7 +124,7 @@ function startScanningRoutine() {
     }
     console.log("Last recorded game: " + lastRecordedGameTime);
     var gamesArray = [];
-    pagesToScan(gamesArray);
+    scanPage(gamesArray);
   });
 }
 
