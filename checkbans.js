@@ -33,7 +33,7 @@ checkBans = () => {
                     playerEls = document.querySelectorAll(`.friends_content .persona[data-steamid="${player.SteamId}"`);
                     playerEls.forEach(playerEl => {
                         let verdict = '';
-                        let verdictEl = document.createElement('span');
+                        let verdictEl = document.createElement('div');
                         if (player.NumberOfVACBans > 0) {
                             verdict += 'VAC';
                         }
@@ -50,8 +50,11 @@ checkBans = () => {
                             verdict += ` ${player.DaysSinceLastBan} day${player.DaysSinceLastBan > 1 ? 's' : ''} ago.`;
                             verdictEl.style.color = 'red';
                         }
-                        verdictEl.textContent = verdict;
-                        playerEl.querySelector('.friend_block_content').appendChild(verdictEl);
+                        if (verdict) {
+                            playerEl.querySelector('.friend_block_content br').remove();
+                            verdictEl.textContent = verdict;
+                            playerEl.querySelector('.friend_block_content').appendChild(verdictEl);
+                        }
                     });
                 })
                 if (batches.length > i+1) {
