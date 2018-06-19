@@ -56,7 +56,7 @@ function hideSettings() {
 if (window.location.pathname.split("/").pop() == 'banchecker') {
   //document.querySelector('.sectionTabs a:first-child').classList.remove('active');
   banCheckerButton.classList.add('active');
-  //renderBanCheker();
+  renderBanCheker();
 }
 document.querySelector('.friends_nav .icon_recent_friends').insertAdjacentElement('afterend', banCheckerButton);
 
@@ -64,16 +64,18 @@ document.querySelector('.friends_nav .icon_recent_friends').insertAdjacentElemen
 // It's called from createGameElement function for each player of a game
 function createPlayerElement(player) {
   var playerBody = document.createElement('div');
-  playerBody.classList.add('friendBlock', 'persona');
+  playerBody.classList.add('friend_block_v2', 'persona');
+  playerBody.id = 'fr_' + player.miniprofile;
+  playerBody.dataset.miniprofile = player.miniprofile;
+  playerBody.dataset.steamid = player.steamid;
   if (player.bannedAfterRecording) playerBody.classList.add('banned');
-  playerBody.setAttribute('data-miniprofile', player.miniprofile);
-  playerBody.setAttribute('href', "//steamcommunity.com/profiles/" + player.steamid);
-  var friendBlockLinkOverlay = document.createElement('a');
-  friendBlockLinkOverlay.href = '//steamcommunity.com/profiles/' + player.steamid;
-  friendBlockLinkOverlay.className = 'friendBlockLinkOverlay';
-  playerBody.appendChild(friendBlockLinkOverlay);
+  var selectableOverlay = document.createElement('a');
+  selectableOverlay.className = 'selectable_overlay';
+  selectableOverlay.dataset.container = '#fr_' + player.miniprofile;
+  selectableOverlay.setAttribute('href', "//steamcommunity.com/profiles/" + player.steamid);
+  playerBody.appendChild(selectableOverlay);
   var avatar = document.createElement('div');
-  avatar.className = 'playerAvatar';
+  avatar.className = 'player_avatar friend_block_link_overlay';
   // We'll load avatars like this so we don't waste Steam API calls
   fetch('//steamcommunity.com/profiles/' + player.steamid + '?xml=1')
     .then(response => response.text())
@@ -82,18 +84,22 @@ function createPlayerElement(player) {
       var avatarURLs = xml.match(regex);
       if (avatarURLs != null) {
         var avatarURL = avatarURLs[0];
-        avatarImgTag = document.createElement('img');
-        avatarImgTag.src = avatarURL;
-        avatar.appendChild(avatarImgTag);
+      } else {
+        avatarURL = 'https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/fe/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_medium.jpg';
       }
-      var thisPlayer = document.querySelectorAll('.friendBlock[data-miniprofile="' + player.miniprofile + '"]');
+      avatarImgTag = document.createElement('img');
+      avatarImgTag.src = avatarURL;
+      avatar.appendChild(avatarImgTag);
+      var thisPlayer = document.querySelectorAll('#fr_' + player.miniprofile);
       thisPlayer.forEach(function (thisOne) {
-        if (thisOne.querySelector('.playerAvatar') == null) {
+        if (thisOne.querySelector('.player_avatar') == null) {
           thisOne.insertAdjacentElement('afterbegin', avatar);
         };
       });
     });
+  playerBody.appendChild(avatar);
   var name = document.createElement('div');
+  name.className = 'friend_block_content';
   name.appendChild(document.createTextNode(player.name));
   var playerStatus = document.createElement('span');
   playerStatus.className = 'friendSmallText';
@@ -271,8 +277,24 @@ function applyFilter() {
 
 // This function prepares UI, it's called only from /banchecker page
 function renderBanCheker() {
-  var body = document.querySelector('.responsive_friendblocks_ctn');
-  body.innerHTML = '';
+  document.querySelector('#subpage_container').innerHTML = '';
+  
+  var container = document.createElement('div');
+  container.id = 'friends_coplay_ctn';
+  container.className = 'friends_list_ctn pagecontent no_header';
+  document.querySelector('#subpage_container').appendChild(container);
+  var titleContainer = document.createElement('div');
+  titleContainer.className = 'profile_friends title_bar';
+  var title = document.createElement('div');
+  title.className = 'profile_friends title';
+  title.textContent = 'Ban Checker';
+  titleContainer.appendChild(title);
+  historyContainer = document.createElement('div');
+  historyContainer.className = 'profile_friends responsive_friendblocks';
+  historyContainer.id = 'friends_list';
+  container.appendChild(titleContainer);
+  container.appendChild(historyContainer);
+
 
   var extensionInfo = document.createElement('div');
   extensionInfo.style.paddingBottom = "1.5em";
@@ -294,18 +316,18 @@ function renderBanCheker() {
   </select>
   <input id="appidFilter" style="display:none" type="text" value="" placeholder="appid, for example 730"/>`;
   extensionInfo.insertAdjacentHTML('beforeend', filterGames);
-  body.appendChild(extensionInfo);
+  historyContainer.appendChild(extensionInfo);
 
   var main = document.createElement('div');
   main.className = 'main';
-  body.appendChild(main);
+  historyContainer.appendChild(main);
 
   var pagination = document.createElement('div');
   pagination.className = 'banchecker-pagination';
   pagination.innerHTML = `<input id="loadMore" type="button" value="Load ` + loadMoreValue + ` more games">
                           <input id="loadAll" type="button" value="Load all games (may lag)">
                           <div id="paginationNoMore" style="visibility:hidden; padding-top:.5em">No more games to load</div>`;
-  body.appendChild(pagination);
+  historyContainer.appendChild(pagination);
   document.querySelector('#loadMore').addEventListener("click", function () { loadMore(false) });
   document.querySelector('#loadAll').addEventListener("click", function () { loadMore(true) });
 
