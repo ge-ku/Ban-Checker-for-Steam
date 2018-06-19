@@ -3,16 +3,16 @@ var gamesShowingIndex = 0; // Index of a last game shown
 
 // Add links to Ban Checker page
 var banCheckerButton = document.createElement('a');
-banCheckerButton.setAttribute('href', "//steamcommunity.com/my/friends/banchecker");
-banCheckerButton.className = 'sectionTab';
+banCheckerButton.setAttribute('href', '//steamcommunity.com/my/friends/banchecker');
+banCheckerButton.className = 'icon_item icon_recent_friends banchecker';
+banCheckerButton.dataset.navid = 'banchecker';
 var banCheckerButtonText = document.createElement('span');
 banCheckerButtonText.appendChild(document.createTextNode('Ban Checker'));
+banCheckerButtonText.className = 'title';
 banCheckerButton.appendChild(banCheckerButtonText);
 
-var banCheckerMobileButton = document.createElement('option');
-banCheckerMobileButton.value = "//steamcommunity.com/my/friends/banchecker";
-banCheckerMobileButton.appendChild(document.createTextNode('Ban Checker'));
-document.querySelector('.responsive_tab_select').appendChild(banCheckerMobileButton);
+// TODO: Add button to mobile view
+// document.querySelector('.friends_nav').appendChild(banCheckerButtonText);
 
 // Inject options.html if user opens settings from Ban Checker page 
 // These are functions to show and hide settings
@@ -54,11 +54,11 @@ function hideSettings() {
 // If this page is BanChecker page (ends with "/banchecker")
 // we actually start showing out content, as well as indicate it visually
 if (window.location.pathname.split("/").pop() == 'banchecker') {
-  document.querySelector('.sectionTabs a:first-child').classList.remove('active');
+  //document.querySelector('.sectionTabs a:first-child').classList.remove('active');
   banCheckerButton.classList.add('active');
-  renderBanCheker();
+  //renderBanCheker();
 }
-document.querySelector('.sectionTabs').appendChild(banCheckerButton);
+document.querySelector('.friends_nav .icon_recent_friends').insertAdjacentElement('afterend', banCheckerButton);
 
 // This function returns DOM element which contains info about one player
 // It's called from createGameElement function for each player of a game
