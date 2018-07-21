@@ -34,25 +34,33 @@ checkBans = () => {
                     playerEls.forEach(playerEl => {
                         let verdict = '';
                         let verdictEl = document.createElement('div');
-                        if (player.NumberOfVACBans > 0) {
-                            verdict += 'VAC';
+                        let icon = '';
+                        verdictEl.className = 'banchecker-verdict';
+                        if (player.NumberOfVACBans > 0 || player.NumberOfGameBans > 0) {
+                            verdictEl.classList.add('banned');
+                            icon = 'banned.svg';
+                            verdict = `${player.NumberOfVACBans > 0 ? `${player.NumberOfVACBans} VAC`: ''}`
+                                    + `${player.NumberOfVACBans > 0 && player.NumberOfGameBans > 0 ? ' & ' : ''}`
+                                    + `${player.NumberOfGameBans > 0 ? `${player.NumberOfGameBans} Game`: ''}`
+                                    + ` ban${player.NumberOfVACBans + player.NumberOfGameBans > 1 ? 's' : ''} on record\n`
+                                    + `Last ban occured ${player.DaysSinceLastBan} day${player.DaysSinceLastBan > 1 ? 's' : ''} ago`;
                         }
-                        if (player.NumberOfGameBans > 0) {
-                            if (verdict) verdict += ' & ';
-                            verdict += 'Game Ban';
-                        } 
                         if (!verdict) {
+                            verdictEl.classList.add('clean');
                             if (greentext) {
+                                icon = 'clean.svg';
                                 verdict = 'No bans for this player';
-                                verdictEl.style.color = 'green';
-                            }                            
-                        } else {
-                            verdict += ` ${player.DaysSinceLastBan} day${player.DaysSinceLastBan > 1 ? 's' : ''} ago.`;
-                            verdictEl.style.color = 'red';
-                        }
+                            }
+                        }                         
                         if (verdict) {
-                            playerEl.querySelector('.friend_block_content br').remove();
-                            verdictEl.textContent = verdict;
+                            const verdictElIcon = document.createElement('div');
+                            const verdictElIconImg = document.createElement('img');
+                            verdictElIconImg.src = chrome.extension.getURL(`icons/${icon}`);
+                            verdictElIcon.appendChild(verdictElIconImg);
+                            const verdictElText = document.createElement('span');
+                            verdictElText.textContent = verdict;
+                            verdictEl.appendChild(verdictElIcon);
+                            verdictEl.appendChild(verdictElText);
                             playerEl.querySelector('.friend_block_content').appendChild(verdictEl);
                         }
                     });

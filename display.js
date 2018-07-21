@@ -4,7 +4,7 @@ var gamesShowingIndex = 0; // Index of a last game shown
 // Add links to Ban Checker page
 var banCheckerButton = document.createElement('a');
 banCheckerButton.setAttribute('href', '//steamcommunity.com/my/friends/banchecker');
-banCheckerButton.className = 'icon_item icon_recent_friends banchecker';
+banCheckerButton.className = 'icon_item icon_all_groups banchecker';
 banCheckerButton.dataset.navid = 'banchecker';
 var banCheckerButtonText = document.createElement('span');
 banCheckerButtonText.appendChild(document.createTextNode('Ban Checker'));
@@ -318,6 +318,7 @@ function renderBanCheker() {
   extensionInfo.style.paddingBottom = "1.5em";
   var InfoMessage = `<p>This page will show only those bans which occured after you played together.</p>
                      <p>Extension records games periodically every few hours, they don't appear here immediately.</p>
+                     <p>For complete CS:GO Match history click <a href="https://steamcommunity.com/my/gcpd/730?tab=matchhistorycompetitive">here</a>.
                      <p>With your own Steam API key extension will periodically scan every recorded game for recent bans.<br>
                      Without the key it will only scan last 100 players once a day. You can set your API key in <span class="openSettings" style="text-decoration:underline; cursor:pointer">settings</span>.</p>`;
   extensionInfo.innerHTML = InfoMessage;

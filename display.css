@@ -107,3 +107,50 @@
     border-color: #66c0f4;
     color: #fff;
   }
+
+  .banchecker-verdict {
+    position: absolute;
+    color: #ebebeb;
+    top: 0;
+    right: 0;
+    width: auto;
+    max-width: 28px;
+    height: 100%;
+    transition: all .3s;
+    z-index: 10;
+    cursor: default;
+    display: flex;
+    align-items: center;
+  }
+
+  .banchecker-verdict:hover {
+    max-width: 235px;
+  }
+
+  .banchecker-verdict div {
+    flex: 0 0 28px;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  .banchecker-verdict:hover div {
+    flex: 0 0 0;
+  }
+
+  .banchecker-verdict span {
+    padding: 10px;
+    white-space: pre;
+  }
+
+  .banchecker-verdict.banned {
+    background-color: rgba(255, 0, 0, .4);
+  }
+  .banchecker-verdict.banned:hover {
+    background-color: rgba(255, 0, 0, .9);
+  }
+  .banchecker-verdict.clean {
+    background-color: rgba(0, 255, 0, .2);
+  }
+  .banchecker-verdict.clean:hover {
+    background-color: rgba(0, 150, 0, .9);
+  }
