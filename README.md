@@ -14,7 +14,7 @@ Script works on pages with URIs that follow such patterns:
 # Screenshots
 Extension:
 
-![ScreenShot](https://lh3.googleusercontent.com/EV0ZVZTntc5efsh7SZQHS9cIXQZ6G25Uurp2IzzncwXFKSX1xXBcFEvPRzeM8m96Oii4-vdxpg=s640-h400-e365-rw)
+![InAction](https://user-images.githubusercontent.com/11873225/43035800-3092124c-8cfe-11e8-8397-e4d7fa4044ba.gif)
 
 Options:
 
