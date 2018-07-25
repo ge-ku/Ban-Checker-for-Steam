@@ -22,7 +22,7 @@ window.onpopstate = (event) => {
 banCheckerButton.addEventListener('click', (e) => {
   document.querySelector('.friends_nav .active').classList.remove('active');
   document.querySelector('.friends_nav .banchecker').classList.add('active');
-  history.pushState({banchecker: true}, 'Ban Checker', '/id/geku/friends/banchecker');
+  history.pushState({banchecker: true}, 'Ban Checker', '/my/friends/banchecker');
   e.preventDefault();
   renderBanCheker();
 });
