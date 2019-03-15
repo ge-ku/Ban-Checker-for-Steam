@@ -74,7 +74,7 @@ if (window.location.pathname.split("/").pop() == 'banchecker') {
   banCheckerButton.classList.add('active');
   renderBanCheker();
 }
-document.querySelector('.friends_nav .icon_recent_friends').insertAdjacentElement('afterend', banCheckerButton);
+document.querySelector('.friends_nav').insertAdjacentElement('beforeend', banCheckerButton);
 
 // This function returns DOM element which contains info about one player
 // It's called from createGameElement function for each player of a game
