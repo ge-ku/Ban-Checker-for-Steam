@@ -19,66 +19,66 @@ checkBans = () => {
         return arr;
     }, []);
 
+    const doPlayer = (player) => {
+        playerEls = document.querySelectorAll(`.friends_content .persona[data-steamid="${player.SteamId}"`);
+        playerEls.forEach(playerEl => {
+            let verdict = '';
+            let verdictEl = document.createElement('div');
+            let icon = '';
+            verdictEl.className = 'banchecker-verdict';
+            if (player.NumberOfVACBans > 0 || player.NumberOfGameBans > 0) {
+                verdictEl.classList.add('banned');
+                icon = 'banned.svg';
+                verdict = `${player.NumberOfVACBans > 0 ? `${player.NumberOfVACBans} VAC`: ''}`
+                        + `${player.NumberOfVACBans > 0 && player.NumberOfGameBans > 0 ? ' & ' : ''}`
+                        + `${player.NumberOfGameBans > 0 ? `${player.NumberOfGameBans} Game`: ''}`
+                        + ` ban${player.NumberOfVACBans + player.NumberOfGameBans > 1 ? 's' : ''} on record\n`
+                        + `Last ban occured ${player.DaysSinceLastBan} day${player.DaysSinceLastBan > 1 ? 's' : ''} ago`;
+            }
+            if (!verdict) {
+                verdictEl.classList.add('clean');
+                if (greentext) {
+                    icon = 'clean.svg';
+                    verdict = 'No bans for this player';
+                }
+            }                         
+            if (verdict) {
+                const verdictElIcon = document.createElement('div');
+                const verdictElIconImg = document.createElement('img');
+                verdictElIconImg.src = chrome.extension.getURL(`icons/${icon}`);
+                verdictElIcon.appendChild(verdictElIconImg);
+                const verdictElText = document.createElement('span');
+                verdictElText.textContent = verdict;
+                verdictEl.appendChild(verdictElIcon);
+                verdictEl.appendChild(verdictElText);
+                playerEl.querySelector('.friend_block_content').appendChild(verdictEl);
+            }
+        });
+    }
+
     const fetchBatch = (i, retryCount) => {
-        fetch(`https://api.steampowered.com/ISteamUser/GetPlayerBans/v1/?key=${apikey}&steamids=${batches[i].join(',')}`)
-            .then(res => {
-                if (res.ok) {
-                    return res.json();
-                } else {
-                    throw Error(`Code ${res.status}. ${res.statusText}`);
-                }
-            })
-            .then(json => {
-                json.players.forEach(player => {
-                    playerEls = document.querySelectorAll(`.friends_content .persona[data-steamid="${player.SteamId}"`);
-                    playerEls.forEach(playerEl => {
-                        let verdict = '';
-                        let verdictEl = document.createElement('div');
-                        let icon = '';
-                        verdictEl.className = 'banchecker-verdict';
-                        if (player.NumberOfVACBans > 0 || player.NumberOfGameBans > 0) {
-                            verdictEl.classList.add('banned');
-                            icon = 'banned.svg';
-                            verdict = `${player.NumberOfVACBans > 0 ? `${player.NumberOfVACBans} VAC`: ''}`
-                                    + `${player.NumberOfVACBans > 0 && player.NumberOfGameBans > 0 ? ' & ' : ''}`
-                                    + `${player.NumberOfGameBans > 0 ? `${player.NumberOfGameBans} Game`: ''}`
-                                    + ` ban${player.NumberOfVACBans + player.NumberOfGameBans > 1 ? 's' : ''} on record\n`
-                                    + `Last ban occured ${player.DaysSinceLastBan} day${player.DaysSinceLastBan > 1 ? 's' : ''} ago`;
-                        }
-                        if (!verdict) {
-                            verdictEl.classList.add('clean');
-                            if (greentext) {
-                                icon = 'clean.svg';
-                                verdict = 'No bans for this player';
-                            }
-                        }                         
-                        if (verdict) {
-                            const verdictElIcon = document.createElement('div');
-                            const verdictElIconImg = document.createElement('img');
-                            verdictElIconImg.src = chrome.extension.getURL(`icons/${icon}`);
-                            verdictElIcon.appendChild(verdictElIconImg);
-                            const verdictElText = document.createElement('span');
-                            verdictElText.textContent = verdict;
-                            verdictEl.appendChild(verdictElIcon);
-                            verdictEl.appendChild(verdictElText);
-                            playerEl.querySelector('.friend_block_content').appendChild(verdictEl);
-                        }
-                    });
-                })
-                if (batches.length > i+1) {
-                    setTimeout(() => fetchBatch(i+1), 1000);
-                } else {
-                    console.log('Looks like we\'re done.');
-                }
-            })
-            .catch((error) => {
+        chrome.runtime.sendMessage(chrome.runtime.id, {
+            action: "fetchBans",
+            apikey: apikey,
+            batch: batches[i]
+        }, (data, error) => {
+            if (error !== undefined) {
                 console.log(`Error while scanning players for bans:\n${error}` +
                 `${retryCount !== undefined && retryCount > 0 ? `\n\nRetrying to scan... ${maxRetries - retryCount}/3`
                                                               : `\n\nCouldn't scan for bans after ${maxRetries} retries :(`}`);
                 if (retryCount > 0) {
                     setTimeout(() => fetchBatch(i, retryCount - 1), 3000);
                 }
-            });
+                return;
+            }
+
+            data.players.forEach(player => doPlayer(player));
+            if (batches.length > i+1) {
+                setTimeout(() => fetchBatch(i+1), 1000);
+            } else {
+                console.log('Looks like we\'re done.');
+            }
+        });
     }
     fetchBatch(0, maxRetries);
 }
