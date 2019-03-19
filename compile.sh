@@ -1,13 +1,13 @@
 # !/bin/bash
 
-# This script will minify javascript using Closure Compiler and pack everything into BanChecker_BROWSER_{VERSION}.zip ready for
+# This script will pack everything into BanChecker_BROWSER_{VERSION}.zip ready for
 # uploading to the Chrome Store and Add-ons for Firefox. This way we can use unpacked extension while developing without changing
 # any filename or manifest.json or manually replacing files.
 
 # Use "Bash on Ubuntu on Windows" if you're on Windows 10 or cygwin to run on Windows.
 
 VERSION=$(grep '"version":' manifest.json | sed 's/^.*: //;s/"//g' | tr -d ',\r\n');
-echo "Ban Checker version in manifest.json: $VERSION. This script will minify javascript using Closure Compiler and pack everything into Banchecker_Chrome_${VERSION}.zip and Banchecker_Firefox_${VERSION}.zip";
+echo "Ban Checker version in manifest.json: $VERSION. This script will pack everything into Banchecker_Chrome_${VERSION}.zip and Banchecker_Firefox_${VERSION}.zip";
 
 echo "Creating temp folder that will hold files, it'll be deleted in the end...";
 mkdir temp;
