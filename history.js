@@ -433,6 +433,8 @@ function cmpVersions(a, b) {
 }
 
 chrome.runtime.onInstalled.addListener(function(details){
+  if (details.previousVersion == undefined)
+    return;
   console.log(details.previousVersion);
   if (cmpVersions(details.previousVersion, '1.0.6') <= 0){
     console.log("old version detected, removing storage data...");
