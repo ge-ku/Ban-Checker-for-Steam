@@ -4,10 +4,7 @@ let greentext = true;
 
 checkBans = () => {
   const friendEls = document.querySelectorAll('.friends_content .persona');
-  let list = [];
-  friendEls.forEach(persona => {
-    list.push(persona.dataset.steamid);
-  });
+  let list = friendEls.map(persona => persona.dataset.steamid);
   const uniquePlayers = [...new Set(list)];
   let batches = uniquePlayers.reduce((arr, player, i) => {
     const batchIndex = Math.floor(i / 100);
@@ -85,7 +82,8 @@ checkBans = () => {
             `Error while scanning players for bans:\n${error}` +
               `${
                 retryCount !== undefined && retryCount > 0
-                  ? `\n\nRetrying to scan... ${maxRetries - retryCount}/3`
+                  ? `\n\nRetrying to scan... ${maxRetries -
+                      retryCount}/${maxRetries}`
                   : `\n\nCouldn't scan for bans after ${maxRetries} retries :(`
               }`
           );
@@ -113,7 +111,7 @@ const defaultkeys = [
   '2B3382EBA9E8C1B58054BD5C5EE1C36A'
 ];
 
-chrome.storage.sync.get(['customapikey', 'greentext'], function(data) {
+chrome.storage.sync.get(['customapikey', 'greentext'], data => {
   if (typeof data['greentext'] == 'undefined') {
     chrome.storage.sync.set({
       greentext: true

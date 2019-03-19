@@ -292,7 +292,8 @@ const fetchMatchHistoryPage = (recursively, page, retryCount) => {
         `Error while loading match history:\n${error}` +
           `${
             retryCount !== undefined && retryCount > 0
-              ? `\n\nRetrying to fetch page... ${maxRetries - retryCount}/3`
+              ? `\n\nRetrying to fetch page... ${maxRetries -
+                  retryCount}/${maxRetries}`
               : `\n\nCouldn't load data after ${maxRetries} retries :(`
           }`
       );
@@ -339,19 +340,29 @@ const checkBans = players => {
         `request${batches.length > 1 ? 's' : ''}.\n` +
         `${i} successful request${i === 1 ? '' : 's'} so far...`
     );
-    fetch(
-      `https://api.steampowered.com/ISteamUser/GetPlayerBans/v1/?key=${apikey}&steamids=${batches[
-        i
-      ].join(',')}`
-    )
-      .then(res => {
-        if (res.ok) {
-          return res.json();
-        } else {
-          throw Error(`Code ${res.status}. ${res.statusText}`);
+
+    chrome.runtime.sendMessage(
+      chrome.runtime.id,
+      {
+        action: 'fetchBans',
+        apikey: apikey,
+        batch: batches[i]
+      },
+      (json, error) => {
+        if (error !== undefined) {
+          updateStatus(
+            `Error while scanning players for bans:\n${error}` +
+              `${
+                retryCount !== undefined && retryCount > 0
+                  ? `\n\nRetrying to scan... ${maxRetries - retryCount}/3`
+                  : `\n\nCouldn't scan for bans after ${maxRetries} retries :(`
+              }`
+          );
+          if (retryCount > 0) {
+            setTimeout(() => fetchBatch(i, retryCount - 1), 3000);
+          }
+          return;
         }
-      })
-      .then(json => {
         json.players.forEach(player => {
           const playerEls = document.querySelectorAll(
             `tr[data-steamid64="${player.SteamId}"]`
@@ -421,20 +432,8 @@ const checkBans = players => {
               `\n\nHover over ban status to check how many days have passed since last ban.`
           );
         }
-      })
-      .catch(error => {
-        updateStatus(
-          `Error while scanning players for bans:\n${error}` +
-            `${
-              retryCount !== undefined && retryCount > 0
-                ? `\n\nRetrying to scan... ${maxRetries - retryCount}/3`
-                : `\n\nCouldn't scan for bans after ${maxRetries} retries :(`
-            }`
-        );
-        if (retryCount > 0) {
-          setTimeout(() => fetchBatch(i, retryCount - 1), 3000);
-        }
-      });
+      }
+    );
   };
   fetchBatch(0, maxRetries);
 };
