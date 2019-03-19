@@ -4,7 +4,10 @@ let greentext = true;
 
 checkBans = () => {
   const friendEls = document.querySelectorAll('.friends_content .persona');
-  let list = friendEls.map(persona => persona.dataset.steamid);
+  let list = [];
+  friendEls.forEach(persona => {
+    list.push(persona.dataset.steamid);
+  });
   const uniquePlayers = [...new Set(list)];
   let batches = uniquePlayers.reduce((arr, player, i) => {
     const batchIndex = Math.floor(i / 100);
