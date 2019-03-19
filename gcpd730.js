@@ -9,87 +9,98 @@ let providedCustomAPIKey = false;
 let apikey = '';
 
 const banStats = {
-    vacBans: 0,
-    gameBans: 0,
-    recentBans: 0,
-}
+  vacBans: 0,
+  gameBans: 0,
+  recentBans: 0
+};
 
 const funStats = {
-    numberOfMatches: 0,
-    totalKills: 0,
-    totalAssists: 0,
-    totalDeaths: 0,
-    totalWins: 0,
-    totalWaitTime: 0,
-    totalTime: 0
-}
+  numberOfMatches: 0,
+  totalKills: 0,
+  totalAssists: 0,
+  totalDeaths: 0,
+  totalWins: 0,
+  totalWaitTime: 0,
+  totalTime: 0
+};
 
-const getSteamID64 = minProfile => '76' + (parseInt(minProfile) + 561197960265728);
+const getSteamID64 = minProfile =>
+  '76' + (parseInt(minProfile) + 561197960265728);
 
-const parseTime = (time) => {
+const parseTime = time => {
   let timeSecs = 0;
   if (time.includes(':')) {
-      const i = time.indexOf(':');
-      timeSecs += parseInt(time.substr(0,i))*60;
-      timeSecs += parseInt(time.substr(i+1));
+    const i = time.indexOf(':');
+    timeSecs += parseInt(time.substr(0, i)) * 60;
+    timeSecs += parseInt(time.substr(i + 1));
   } else {
-      timeSecs += parseInt(time);
+    timeSecs += parseInt(time);
   }
   return timeSecs;
 };
-const timeString = (time) => {
-    let secs = time;
-    const days = Math.floor(secs / (24 * 60 * 60));
-    secs %= 86400;
-    const hours = Math.floor(secs / (60 * 60)).toString().padStart(2, '0');
-    secs %= 3600;
-    const mins = Math.floor(secs / 60).toString().padStart(2, '0');
-    secs %= 60;
-    secs = secs.toString().padStart(2, '0');
+const timeString = time => {
+  let secs = time;
+  const days = Math.floor(secs / (24 * 60 * 60));
+  secs %= 86400;
+  const hours = Math.floor(secs / (60 * 60))
+    .toString()
+    .padStart(2, '0');
+  secs %= 3600;
+  const mins = Math.floor(secs / 60)
+    .toString()
+    .padStart(2, '0');
+  secs %= 60;
+  secs = secs.toString().padStart(2, '0');
 
-    let result = `${hours}:${mins}:${secs}`;
-    if (days) result = `${days.toString()}d ${result}`;
-    return result;
+  let result = `${hours}:${mins}:${secs}`;
+  if (days) result = `${days.toString()}d ${result}`;
+  return result;
 };
 
 const statusBar = document.createElement('div');
 statusBar.style.margin = '8px 0';
 statusBar.style.whiteSpace = 'pre-wrap';
 const updateStatus = (text, accumulate) => {
-    if (accumulate) {
-        statusBar.textContent = statusBar.textContent + '\n' + text;
-    } else {
-        statusBar.textContent = text;
-    }
-}
+  if (accumulate) {
+    statusBar.textContent = statusBar.textContent + '\n' + text;
+  } else {
+    statusBar.textContent = text;
+  }
+};
 
 const initVariables = () => {
-    const profileAnchor = document.querySelector('#global_actions .user_avatar');
-    if (!profileAnchor) {
-        updateStatus('Error: .user_avatar element was not found');
-    }
-    profileURI = profileAnchor.href;
-    if (!document.querySelector('#load_more_button')) {
-        updateStatus('No "LOAD MORE HISTORY" button is present, seems like there are no more matches');
-    }
-    const steamContinueScript = document.querySelector('#personaldata_elements_container+script');
-    const matchContinueToken = steamContinueScript.text.match(/g_sGcContinueToken = '(\d+)'/);
-    if (!matchContinueToken) {
-        updateStatus('Error: g_sGcContinueToken was not found');
-    }
-    continue_token = matchContinueToken[1];
-    const steamSessionScript = document.querySelector('#global_header+script');
-    const matchSessionID = steamSessionScript.text.match(/g_sessionID = "(.+)"/);
-    if (!matchSessionID) {
-        updateStatus('Error: g_sessionID was not found');
-    }
-    sessionid = matchSessionID[1];
-    const tabOnEl = document.querySelector('.tabOn');
-    if (tabOnEl) {
-        tabURIparam = tabOnEl.parentNode.id.split('_').pop();
-    }
-    if (typeof content !== 'undefined') fetch = content.fetch; // fix for Firefox with disabled third-party cookies
-}
+  const profileAnchor = document.querySelector('#global_actions .user_avatar');
+  if (!profileAnchor) {
+    updateStatus('Error: .user_avatar element was not found');
+  }
+  profileURI = profileAnchor.href;
+  if (!document.querySelector('#load_more_button')) {
+    updateStatus(
+      'No "LOAD MORE HISTORY" button is present, seems like there are no more matches'
+    );
+  }
+  const steamContinueScript = document.querySelector(
+    '#personaldata_elements_container+script'
+  );
+  const matchContinueToken = steamContinueScript.text.match(
+    /g_sGcContinueToken = '(\d+)'/
+  );
+  if (!matchContinueToken) {
+    updateStatus('Error: g_sGcContinueToken was not found');
+  }
+  continue_token = matchContinueToken[1];
+  const steamSessionScript = document.querySelector('#global_header+script');
+  const matchSessionID = steamSessionScript.text.match(/g_sessionID = "(.+)"/);
+  if (!matchSessionID) {
+    updateStatus('Error: g_sessionID was not found');
+  }
+  sessionid = matchSessionID[1];
+  const tabOnEl = document.querySelector('.tabOn');
+  if (tabOnEl) {
+    tabURIparam = tabOnEl.parentNode.id.split('_').pop();
+  }
+  if (typeof content !== 'undefined') fetch = content.fetch; // fix for Firefox with disabled third-party cookies
+};
 
 const funStatsBar = document.createElement('div');
 funStatsBar.style.whiteSpace = 'pre-wrap';
@@ -103,381 +114,464 @@ funStatsBar.style.bottom = '0';
 funStatsBar.style.margin = '4px';
 funStatsBar.style.zIndex = '9';
 const updateStats = () => {
-    if (tabURIparam === 'playerreports' || tabURIparam === 'playercommends') return;
-    const profileURItrimmed = profileURI.replace(/\/$/, '');
-    const myAnchors = document.querySelectorAll('.inner_name .playerAvatar ' +
-                                `a[href="${profileURItrimmed}"]:not(.banchecker-counted)`);
-    myAnchors.forEach(anchorEl => {
-        myMatchStats = anchorEl.closest('tr').querySelectorAll('td');
-        funStats.totalKills += parseInt(myMatchStats[2].textContent, 10);
-        funStats.totalAssists += parseInt(myMatchStats[3].textContent, 10);
-        funStats.totalDeaths += parseInt(myMatchStats[4].textContent, 10);
-        anchorEl.classList.add('banchecker-counted');
+  if (tabURIparam === 'playerreports' || tabURIparam === 'playercommends')
+    return;
+  const profileURItrimmed = profileURI.replace(/\/$/, '');
+  const myAnchors = document.querySelectorAll(
+    '.inner_name .playerAvatar ' +
+      `a[href="${profileURItrimmed}"]:not(.banchecker-counted)`
+  );
+  myAnchors.forEach(anchorEl => {
+    myMatchStats = anchorEl.closest('tr').querySelectorAll('td');
+    funStats.totalKills += parseInt(myMatchStats[2].textContent, 10);
+    funStats.totalAssists += parseInt(myMatchStats[3].textContent, 10);
+    funStats.totalDeaths += parseInt(myMatchStats[4].textContent, 10);
+    anchorEl.classList.add('banchecker-counted');
+  });
+  const matchesData = document.querySelectorAll(
+    '.val_left:not(.banchecker-counted)'
+  );
+  funStats.numberOfMatches += matchesData.length;
+  matchesData.forEach(matchData => {
+    matchData.querySelectorAll('td').forEach((dataEl, index) => {
+      if (index < 2) return;
+      const data = dataEl.innerText.trim();
+      if (data.includes(':')) {
+        const i = data.indexOf(':');
+        const value = data.substr(i + 1);
+        if (index === 2) {
+          funStats.totalWaitTime += parseTime(value);
+        } else if (index === 3) {
+          funStats.totalTime += parseTime(value);
+        }
+      }
     });
-    const matchesData = document.querySelectorAll('.val_left:not(.banchecker-counted)');
-    funStats.numberOfMatches += matchesData.length;
-    matchesData.forEach(matchData => {
-        matchData.querySelectorAll('td').forEach((dataEl, index) => {
-            if (index < 2) return;
-            const data = dataEl.innerText.trim();
-            if (data.includes(':')) {
-                const i = data.indexOf(':');
-                const value = data.substr(i+1);
-                if (index === 2) {
-                    funStats.totalWaitTime += parseTime(value);
-                } else if (index === 3) {
-                    funStats.totalTime += parseTime(value);
-                }
-            }
-        });
-        matchData.classList.add('banchecker-counted');
-    })
-    funStatsBar.textContent = 'Some fun stats for loaded matches:\n' +
-                              `Number of matches: ${funStats.numberOfMatches}\n` +
-                              `Total kills: ${funStats.totalKills}\n` +
-                              `Total assists: ${funStats.totalAssists}\n` +
-                              `Total deaths: ${funStats.totalDeaths}\n` +
-                              `K/D: ${(funStats.totalKills/funStats.totalDeaths).toFixed(3)} | ` +
-                              `(K+A)/D: ${((funStats.totalKills+funStats.totalAssists)/funStats.totalDeaths).toFixed(3)}\n` +
-                              `Total wait time: ${timeString(funStats.totalWaitTime)}\n` +
-                              `Total match time: ${timeString(funStats.totalTime)}`;
-}
+    matchData.classList.add('banchecker-counted');
+  });
+  funStatsBar.textContent =
+    'Some fun stats for loaded matches:\n' +
+    `Number of matches: ${funStats.numberOfMatches}\n` +
+    `Total kills: ${funStats.totalKills}\n` +
+    `Total assists: ${funStats.totalAssists}\n` +
+    `Total deaths: ${funStats.totalDeaths}\n` +
+    `K/D: ${(funStats.totalKills / funStats.totalDeaths).toFixed(3)} | ` +
+    `(K+A)/D: ${(
+      (funStats.totalKills + funStats.totalAssists) /
+      funStats.totalDeaths
+    ).toFixed(3)}\n` +
+    `Total wait time: ${timeString(funStats.totalWaitTime)}\n` +
+    `Total match time: ${timeString(funStats.totalTime)}`;
+};
 
 const formatMatchTables = () => {
-    const daysSince = (dateString) => {
-        const matchDate = dateString.match(/(20\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)/);
-        let daysSinceMatch = -1;
-        if (matchDate.length > 6) {
-            const year = parseInt(matchDate[1], 10);
-            const month = parseInt(matchDate[2], 10) - 1;
-            const day = parseInt(matchDate[3], 10);
-            const hour = parseInt(matchDate[4], 10);
-            const minute = parseInt(matchDate[5], 10);
-            const second = parseInt(matchDate[6], 10);
-            const matchDateObj = new Date(year, month, day, hour, minute, second);
-            const matchDayTime = matchDateObj.getTime();
-            const currentTime = Date.now();
-            const timePassed = currentTime - matchDayTime;
-            daysSinceMatch = Math.ceil(timePassed / (1000 * 60 * 60 * 24));
-        }
-        return daysSinceMatch;
+  const daysSince = dateString => {
+    const matchDate = dateString.match(
+      /(20\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)/
+    );
+    let daysSinceMatch = -1;
+    if (matchDate.length > 6) {
+      const year = parseInt(matchDate[1], 10);
+      const month = parseInt(matchDate[2], 10) - 1;
+      const day = parseInt(matchDate[3], 10);
+      const hour = parseInt(matchDate[4], 10);
+      const minute = parseInt(matchDate[5], 10);
+      const second = parseInt(matchDate[6], 10);
+      const matchDateObj = new Date(year, month, day, hour, minute, second);
+      const matchDayTime = matchDateObj.getTime();
+      const currentTime = Date.now();
+      const timePassed = currentTime - matchDayTime;
+      daysSinceMatch = Math.ceil(timePassed / (1000 * 60 * 60 * 24));
     }
-    if (tabURIparam === 'playerreports' || tabURIparam === 'playercommends') {
-        document.querySelectorAll('.generic_kv_table > tbody > tr:not(:first-child):not(.banchecker-profile)').forEach(report => {
-            const dateEl = report.querySelector('td:first-child');
-            const daysSinceMatch = daysSince(dateEl.textContent);
-            const minProfile = report.querySelector('.linkTitle').dataset.miniprofile;
-            report.dataset.steamid64 = getSteamID64(minProfile);
-            report.dataset.dayssince = daysSinceMatch;
-            report.classList.add('banchecker-profile');
-            report.classList.add('banchecker-formatted');
+    return daysSinceMatch;
+  };
+  if (tabURIparam === 'playerreports' || tabURIparam === 'playercommends') {
+    document
+      .querySelectorAll(
+        '.generic_kv_table > tbody > tr:not(:first-child):not(.banchecker-profile)'
+      )
+      .forEach(report => {
+        const dateEl = report.querySelector('td:first-child');
+        const daysSinceMatch = daysSince(dateEl.textContent);
+        const minProfile = report.querySelector('.linkTitle').dataset
+          .miniprofile;
+        report.dataset.steamid64 = getSteamID64(minProfile);
+        report.dataset.dayssince = daysSinceMatch;
+        report.classList.add('banchecker-profile');
+        report.classList.add('banchecker-formatted');
+      });
+  } else {
+    document
+      .querySelectorAll(
+        '.csgo_scoreboard_inner_right:not(.banchecker-formatted)'
+      )
+      .forEach(table => {
+        const leftColumn = table.parentElement.parentElement.querySelector(
+          '.csgo_scoreboard_inner_left'
+        );
+        const daysSinceMatch = daysSince(leftColumn.textContent);
+        table.querySelectorAll('tbody > tr').forEach((tr, i) => {
+          if (i === 0 || tr.childElementCount < 3) return;
+          const minProfile = tr.querySelector('.linkTitle').dataset.miniprofile;
+          const steamID64 = getSteamID64(minProfile);
+          tr.dataset.steamid64 = steamID64;
+          tr.dataset.dayssince = daysSinceMatch;
+          tr.classList.add('banchecker-profile');
         });
-    } else {
-        document.querySelectorAll('.csgo_scoreboard_inner_right:not(.banchecker-formatted)').forEach(table => {
-            const leftColumn = table.parentElement.parentElement.querySelector('.csgo_scoreboard_inner_left');
-            const daysSinceMatch = daysSince(leftColumn.textContent);
-            table.querySelectorAll('tbody > tr').forEach((tr, i) => {
-                if (i === 0 || tr.childElementCount < 3) return;
-                const minProfile = tr.querySelector('.linkTitle').dataset.miniprofile;
-                const steamID64 = getSteamID64(minProfile);
-                tr.dataset.steamid64 = steamID64;
-                tr.dataset.dayssince = daysSinceMatch;
-                tr.classList.add('banchecker-profile');
-            });
-            table.classList.add('banchecker-formatted');
-        });
-    }
-}
+        table.classList.add('banchecker-formatted');
+      });
+  }
+};
 
 const fetchMatchHistoryPage = (recursively, page, retryCount) => {
-    document.querySelector('#load_more_button').style.display = 'none';
-    document.querySelector('#inventory_history_loading').style.display = 'block';
-    fetch (`${profileURI}gcpd/730?ajax=1&tab=${tabURIparam}&continue_token=${continue_token}&sessionid=${sessionid}`,
-        {
-            credentials: "include"
-        })
+  document.querySelector('#load_more_button').style.display = 'none';
+  document.querySelector('#inventory_history_loading').style.display = 'block';
+  fetch(
+    `${profileURI}gcpd/730?ajax=1&tab=${tabURIparam}&continue_token=${continue_token}&sessionid=${sessionid}`,
+    {
+      credentials: 'include'
+    }
+  )
     .then(res => {
-        if (res.ok) {
-            const contentType = res.headers.get("content-type");
-            if (contentType && contentType.indexOf("application/json") !== -1) {
-                return res.json();
-            } else {
-                return res.text();
-            }
+      if (res.ok) {
+        const contentType = res.headers.get('content-type');
+        if (contentType && contentType.indexOf('application/json') !== -1) {
+          return res.json();
         } else {
-            throw Error(`Code ${res.status}. ${res.statusText}`);
+          return res.text();
         }
+      } else {
+        throw Error(`Code ${res.status}. ${res.statusText}`);
+      }
     })
     .then(json => {
-        if (!json.success) {
-            throw Error('error getting valid JSON in response to\n' +
-                        `${profileURI}gcpd/730?ajax=1&tab=${tabURIparam}&continue_token=${continue_token}&sessionid=${sessionid}`);
-        }
-        if (json.continue_token) {
-            continue_token = json.continue_token;
+      if (!json.success) {
+        throw Error(
+          'error getting valid JSON in response to\n' +
+            `${profileURI}gcpd/730?ajax=1&tab=${tabURIparam}&continue_token=${continue_token}&sessionid=${sessionid}`
+        );
+      }
+      if (json.continue_token) {
+        continue_token = json.continue_token;
+      } else {
+        updateStatus(
+          'No continue_token returned from Steam, looks like there are no more matches to load!'
+        );
+        continue_token = null;
+      }
+      const parser = new DOMParser(); // todo: don't create new parser for each request
+      const newData = parser.parseFromString(json.html, 'text/html');
+      let elementsToAppend = '.csgo_scoreboard_root > tbody > tr';
+      let elementToAppendTo = '.csgo_scoreboard_root';
+      if (tabURIparam === 'playerreports' || tabURIparam === 'playercommends') {
+        elementsToAppend = 'tbody > tr';
+        elementToAppendTo = '.generic_kv_table tbody';
+      }
+      newData.querySelectorAll(elementsToAppend).forEach((tr, i) => {
+        if (i > 0) document.querySelector(elementToAppendTo).appendChild(tr);
+      });
+      updateStats();
+      formatMatchTables();
+      if (recursively && continue_token) {
+        updateStatus(`Loaded ${page ? page + 1 : 1} page${page ? 's' : ''}...`);
+        fetchMatchHistoryPage(true, page ? page + 1 : 1, maxRetries);
+      } else {
+        updateStatus('');
+        if (!continue_token) {
+          document.querySelector('#inventory_history_loading').style.display =
+            'none';
         } else {
-            updateStatus('No continue_token returned from Steam, looks like there are no more matches to load!');
-            continue_token = null;
+          document.querySelector('#load_more_button').style.display =
+            'inline-block';
+          document.querySelector('#inventory_history_loading').style.display =
+            'none';
         }
-        const parser = new DOMParser(); // todo: don't create new parser for each request
-        const newData = parser.parseFromString(json.html, 'text/html');
-        let elementsToAppend = '.csgo_scoreboard_root > tbody > tr';
-        let elementToAppendTo = '.csgo_scoreboard_root';
-        if (tabURIparam === 'playerreports' || tabURIparam === 'playercommends') {
-            elementsToAppend = 'tbody > tr';
-            elementToAppendTo = '.generic_kv_table tbody';
-        }
-        newData.querySelectorAll(elementsToAppend).forEach((tr, i) => {
-            if (i > 0) document.querySelector(elementToAppendTo).appendChild(tr);
-        })
-        updateStats();
-        formatMatchTables();
-        if (recursively && continue_token) {
-            updateStatus(`Loaded ${page ? page + 1 : 1} page${page ? 's' : ''}...`);
-            fetchMatchHistoryPage(true, page ? page + 1 : 1, maxRetries);
-        } else {
-            updateStatus('');
-            if (!continue_token) {
-                document.querySelector('#inventory_history_loading').style.display = 'none';
-            } else {
-                document.querySelector('#load_more_button').style.display = 'inline-block';
-                document.querySelector('#inventory_history_loading').style.display = 'none';
-            }
-        }
+      }
     })
-    .catch((error) => {
-        updateStatus(`Error while loading match history:\n${error}` +
-                     `${retryCount !== undefined && retryCount > 0 ? `\n\nRetrying to fetch page... ${maxRetries - retryCount}/3`
-                                                                   : `\n\nCouldn't load data after ${maxRetries} retries :(`}`);
-        if (retryCount > 0) {
-            setTimeout(() => fetchMatchHistoryPage(true, page, retryCount - 1), 3000);
-        }
-        document.querySelector('#load_more_button').style.display = 'inline-block';
-        document.querySelector('#inventory_history_loading').style.display = 'none';
-    })
-}
+    .catch(error => {
+      updateStatus(
+        `Error while loading match history:\n${error}` +
+          `${
+            retryCount !== undefined && retryCount > 0
+              ? `\n\nRetrying to fetch page... ${maxRetries - retryCount}/3`
+              : `\n\nCouldn't load data after ${maxRetries} retries :(`
+          }`
+      );
+      if (retryCount > 0) {
+        setTimeout(
+          () => fetchMatchHistoryPage(true, page, retryCount - 1),
+          3000
+        );
+      }
+      document.querySelector('#load_more_button').style.display =
+        'inline-block';
+      document.querySelector('#inventory_history_loading').style.display =
+        'none';
+    });
+};
 
 const fetchMatchHistory = () => {
-    if (continue_token && sessionid && profileURI) {
-        console.log(`First continue token: ${continue_token} | SessionID: ${sessionid} | Profile: ${profileURI}`);
-        updateStatus('Loading Match history...');
-        fetchMatchHistoryPage(true, 1, maxRetries);
-    }
-}
+  if (continue_token && sessionid && profileURI) {
+    console.log(
+      `First continue token: ${continue_token} | SessionID: ${sessionid} | Profile: ${profileURI}`
+    );
+    updateStatus('Loading Match history...');
+    fetchMatchHistoryPage(true, 1, maxRetries);
+  }
+};
 
-const checkBans = (players) => {
-    const uniquePlayers = [...new Set(players)];
-    let batches = uniquePlayers.reduce((arr, player, i) => {
-        const batchIndex = Math.floor(i/100);
-        if (!arr[batchIndex]) {
-            arr[batchIndex] = [player];
-        } else {
-            arr[batchIndex].push(player);
-        }
-        return arr;
-    }, []);
-    const fetchBatch = (i, retryCount) => {
-        updateStatus(`Loaded unchecked matches contain ${uniquePlayers.length} players.\n` +
-                 `We can scan 100 players at a time so we're sending ${batches.length} ` +
-                 `request${batches.length > 1 ? 's' : ''}.\n` +
-                 `${i} successful request${i === 1 ? '': 's'} so far...`);
-        fetch(`https://api.steampowered.com/ISteamUser/GetPlayerBans/v1/?key=${apikey}&steamids=${batches[i].join(',')}`)
-            .then(res => {
-                if (res.ok) {
-                    return res.json();
-                } else {
-                    throw Error(`Code ${res.status}. ${res.statusText}`);
-                }
-            })
-            .then(json => {
-                json.players.forEach(player => {
-                    const playerEls = document.querySelectorAll(`tr[data-steamid64="${player.SteamId}"]`);
-                    const daySinceLastMatch = parseInt(playerEls[0].dataset.dayssince, 10);
-                    let verdict = '';
-                    if (player.NumberOfVACBans > 0) {
-                        verdict += 'VAC';
-                        banStats.vacBans++;
-                    }
-                    if (player.NumberOfGameBans > 0) {
-                        if (verdict) verdict += ' &\n';
-                        verdict += 'Game';
-                        banStats.gameBans++;
-                    }
-                    if (verdict) {
-                        const daysAfter = daySinceLastMatch - player.DaysSinceLastBan;
-                        if (daySinceLastMatch > player.DaysSinceLastBan) {
-                            banStats.recentBans++;
-                            verdict += '+' + daysAfter;
-                        } else {
-                            verdict += daysAfter;
-                        }
-                    }
-                    playerEls.forEach(playerEl => {
-                        playerEl.classList.add('banchecker-checked');
-                        verdictEl = playerEl.querySelector('.banchecker-bans');
-                        if (verdict) {
-                            if (daySinceLastMatch > player.DaysSinceLastBan) {
-                                verdictEl.style.color = 'red';
-                            } else {
-                                verdictEl.style.color = 'grey';
-                            }
-                            verdictEl.style.cursor = 'help';
-                            verdictEl.textContent = verdict;
-                            verdictEl.title = `Days since last ban: ${player.DaysSinceLastBan}`;
-                        } else {
-                            verdictEl.textContent = '';
-                        }
-                    })
-                })
-                if (batches.length > i+1 && providedCustomAPIKey) {
-                    setTimeout(() => fetchBatch(i+1), 1000);
-                }
-                else if (batches.length > i+1 && !providedCustomAPIKey) {
-                    updateStatus('You did not provide your own Steam API key, only 100 players were scanned!', true);
-                } else {
-                    updateStatus(`Looks like we're done.\n\n` +
-                                `There were ${banStats.recentBans} players who got banned after playing with you!\n\n` +
-                                `Total ban stats: ${banStats.vacBans} VAC banned and ${banStats.gameBans} ` +
-                                `Game banned players in games we scanned (a lot of these could happen outside of CS:GO.)\n` +
-                                `Total amount of unique players encountered: ${uniquePlayers.length}` +
-                                `\n\nHover over ban status to check how many days have passed since last ban.`);
-                }
-            })
-            .catch((error) => {
-                updateStatus(`Error while scanning players for bans:\n${error}` +
-                `${retryCount !== undefined && retryCount > 0 ? `\n\nRetrying to scan... ${maxRetries - retryCount}/3`
-                                                              : `\n\nCouldn't scan for bans after ${maxRetries} retries :(`}`);
-                if (retryCount > 0) {
-                    setTimeout(() => fetchBatch(i, retryCount - 1), 3000);
-                }
-            });
+const checkBans = players => {
+  const uniquePlayers = [...new Set(players)];
+  let batches = uniquePlayers.reduce((arr, player, i) => {
+    const batchIndex = Math.floor(i / 100);
+    if (!arr[batchIndex]) {
+      arr[batchIndex] = [player];
+    } else {
+      arr[batchIndex].push(player);
     }
-    fetchBatch(0, maxRetries);
-}
+    return arr;
+  }, []);
+  const fetchBatch = (i, retryCount) => {
+    updateStatus(
+      `Loaded unchecked matches contain ${uniquePlayers.length} players.\n` +
+        `We can scan 100 players at a time so we're sending ${
+          batches.length
+        } ` +
+        `request${batches.length > 1 ? 's' : ''}.\n` +
+        `${i} successful request${i === 1 ? '' : 's'} so far...`
+    );
+    fetch(
+      `https://api.steampowered.com/ISteamUser/GetPlayerBans/v1/?key=${apikey}&steamids=${batches[
+        i
+      ].join(',')}`
+    )
+      .then(res => {
+        if (res.ok) {
+          return res.json();
+        } else {
+          throw Error(`Code ${res.status}. ${res.statusText}`);
+        }
+      })
+      .then(json => {
+        json.players.forEach(player => {
+          const playerEls = document.querySelectorAll(
+            `tr[data-steamid64="${player.SteamId}"]`
+          );
+          const daySinceLastMatch = parseInt(
+            playerEls[0].dataset.dayssince,
+            10
+          );
+          let verdict = '';
+          if (player.NumberOfVACBans > 0) {
+            verdict += 'VAC';
+            banStats.vacBans++;
+          }
+          if (player.NumberOfGameBans > 0) {
+            if (verdict) verdict += ' &\n';
+            verdict += 'Game';
+            banStats.gameBans++;
+          }
+          if (verdict) {
+            const daysAfter = daySinceLastMatch - player.DaysSinceLastBan;
+            if (daySinceLastMatch > player.DaysSinceLastBan) {
+              banStats.recentBans++;
+              verdict += '+' + daysAfter;
+            } else {
+              verdict += daysAfter;
+            }
+          }
+          playerEls.forEach(playerEl => {
+            playerEl.classList.add('banchecker-checked');
+            verdictEl = playerEl.querySelector('.banchecker-bans');
+            if (verdict) {
+              if (daySinceLastMatch > player.DaysSinceLastBan) {
+                verdictEl.style.color = 'red';
+              } else {
+                verdictEl.style.color = 'grey';
+              }
+              verdictEl.style.cursor = 'help';
+              verdictEl.textContent = verdict;
+              verdictEl.title = `Days since last ban: ${
+                player.DaysSinceLastBan
+              }`;
+            } else {
+              verdictEl.textContent = '';
+            }
+          });
+        });
+        if (batches.length > i + 1 && providedCustomAPIKey) {
+          setTimeout(() => fetchBatch(i + 1), 1000);
+        } else if (batches.length > i + 1 && !providedCustomAPIKey) {
+          updateStatus(
+            'You did not provide your own Steam API key, only 100 players were scanned!',
+            true
+          );
+        } else {
+          updateStatus(
+            `Looks like we're done.\n\n` +
+              `There were ${
+                banStats.recentBans
+              } players who got banned after playing with you!\n\n` +
+              `Total ban stats: ${banStats.vacBans} VAC banned and ${
+                banStats.gameBans
+              } ` +
+              `Game banned players in games we scanned (a lot of these could happen outside of CS:GO.)\n` +
+              `Total amount of unique players encountered: ${
+                uniquePlayers.length
+              }` +
+              `\n\nHover over ban status to check how many days have passed since last ban.`
+          );
+        }
+      })
+      .catch(error => {
+        updateStatus(
+          `Error while scanning players for bans:\n${error}` +
+            `${
+              retryCount !== undefined && retryCount > 0
+                ? `\n\nRetrying to scan... ${maxRetries - retryCount}/3`
+                : `\n\nCouldn't scan for bans after ${maxRetries} retries :(`
+            }`
+        );
+        if (retryCount > 0) {
+          setTimeout(() => fetchBatch(i, retryCount - 1), 3000);
+        }
+      });
+  };
+  fetchBatch(0, maxRetries);
+};
 
 const checkLoadedMatchesForBans = () => {
-    if (tabURIparam === 'playerreports' || tabURIparam === 'playercommends') {
-        const tableHeader = document.querySelector('.generic_kv_table > tbody > tr:first-child');
-        if (!tableHeader.classList.contains('banchecker-withcolumn')) {
-            tableHeader.classList.add('banchecker-withcolumn');
-            const bansHeader = document.createElement('th');
-            bansHeader.textContent = 'Ban';
-            tableHeader.appendChild(bansHeader);
-        }
-        const uncheckedPlayers = document.querySelectorAll('.generic_kv_table > tbody > tr:not(.banchecker-withcolumn)');
-        uncheckedPlayers.forEach(tr => {
-            tr.classList.add('banchecker-withcolumn');
-            const bansPlaceholder = document.createElement('td');
-            bansPlaceholder.classList.add('banchecker-bans');
-            bansPlaceholder.textContent = '?';
-            tr.appendChild(bansPlaceholder);
-        });
-    } else {
-        const tables = document.querySelectorAll('.banchecker-formatted:not(.banchecker-withcolumn)');
-        tables.forEach(table => {
-            table.classList.add('banchecker-withcolumn');
-            table.querySelectorAll('tr').forEach((tr, i) => {
-                if (i === 0) {
-                    const bansHeader = document.createElement('th');
-                    bansHeader.textContent = 'Bans';
-                    bansHeader.style.minWidth = '5.6em';
-                    tr.appendChild(bansHeader);
-                } else if (tr.childElementCount > 3) {
-                    const bansPlaceholder = document.createElement('td');
-                    bansPlaceholder.classList.add('banchecker-bans');
-                    bansPlaceholder.textContent = '?';
-                    tr.appendChild(bansPlaceholder);
-                } else {
-                    const scoreboard = tr.querySelector('td');
-                    if (scoreboard) scoreboard.setAttribute('colspan', '9');
-                }
-            });;
-        })
+  if (tabURIparam === 'playerreports' || tabURIparam === 'playercommends') {
+    const tableHeader = document.querySelector(
+      '.generic_kv_table > tbody > tr:first-child'
+    );
+    if (!tableHeader.classList.contains('banchecker-withcolumn')) {
+      tableHeader.classList.add('banchecker-withcolumn');
+      const bansHeader = document.createElement('th');
+      bansHeader.textContent = 'Ban';
+      tableHeader.appendChild(bansHeader);
     }
-    const playersEl = document.querySelectorAll('.banchecker-profile:not(.banchecker-checked):not(.banchecker-checking)');
-    let playersArr = [];
-    playersEl.forEach(player => {
-        player.classList.add('banchecker-checking');
-        playersArr.push(player.dataset.steamid64);
-    })
-    checkBans(playersArr);
-}
+    const uncheckedPlayers = document.querySelectorAll(
+      '.generic_kv_table > tbody > tr:not(.banchecker-withcolumn)'
+    );
+    uncheckedPlayers.forEach(tr => {
+      tr.classList.add('banchecker-withcolumn');
+      const bansPlaceholder = document.createElement('td');
+      bansPlaceholder.classList.add('banchecker-bans');
+      bansPlaceholder.textContent = '?';
+      tr.appendChild(bansPlaceholder);
+    });
+  } else {
+    const tables = document.querySelectorAll(
+      '.banchecker-formatted:not(.banchecker-withcolumn)'
+    );
+    tables.forEach(table => {
+      table.classList.add('banchecker-withcolumn');
+      table.querySelectorAll('tr').forEach((tr, i) => {
+        if (i === 0) {
+          const bansHeader = document.createElement('th');
+          bansHeader.textContent = 'Bans';
+          bansHeader.style.minWidth = '5.6em';
+          tr.appendChild(bansHeader);
+        } else if (tr.childElementCount > 3) {
+          const bansPlaceholder = document.createElement('td');
+          bansPlaceholder.classList.add('banchecker-bans');
+          bansPlaceholder.textContent = '?';
+          tr.appendChild(bansPlaceholder);
+        } else {
+          const scoreboard = tr.querySelector('td');
+          if (scoreboard) scoreboard.setAttribute('colspan', '9');
+        }
+      });
+    });
+  }
+  const playersEl = document.querySelectorAll(
+    '.banchecker-profile:not(.banchecker-checked):not(.banchecker-checking)'
+  );
+  let playersArr = [];
+  playersEl.forEach(player => {
+    player.classList.add('banchecker-checking');
+    playersArr.push(player.dataset.steamid64);
+  });
+  checkBans(playersArr);
+};
 
 const menu = document.createElement('div');
 menu.style.padding = '0 14px';
 menu.id = 'banchecker-menu';
 
 const createSteamButton = (text, iconURI) => {
-    const button = document.createElement('div');
-    // pullup_item class style replication using js
-    // TODO: move to separate css file for sanity
-    button.style.display = 'inline-block';
+  const button = document.createElement('div');
+  // pullup_item class style replication using js
+  // TODO: move to separate css file for sanity
+  button.style.display = 'inline-block';
+  button.style.backgroundColor = 'rgba( 103, 193, 245, 0.2 )';
+  button.style.padding = '3px 8px 0px 0px';
+  button.style.borderRadius = '2px';
+  button.style.marginRight = '6px';
+  button.style.cursor = 'pointer';
+  button.style.lineHeight = '18px';
+  button.style.color = '#66c0f4';
+  button.style.fontSize = '11px';
+  button.onmouseover = () => {
+    button.style.backgroundColor = 'rgba( 102, 192, 244, 0.4 )';
+    button.style.color = '#ffffff';
+  };
+  button.onmouseout = () => {
     button.style.backgroundColor = 'rgba( 103, 193, 245, 0.2 )';
-    button.style.padding = '3px 8px 0px 0px';
-    button.style.borderRadius = '2px';
-    button.style.marginRight = '6px';
-    button.style.cursor = 'pointer';
-    button.style.lineHeight = '18px';
     button.style.color = '#66c0f4';
-    button.style.fontSize = '11px';
-    button.onmouseover = () => {
-        button.style.backgroundColor = 'rgba( 102, 192, 244, 0.4 )';
-        button.style.color = '#ffffff';
-    }
-    button.onmouseout = () => {
-        button.style.backgroundColor = 'rgba( 103, 193, 245, 0.2 )';
-        button.style.color = '#66c0f4';
-    }
-    const iconEl = document.createElement('div');
-    iconEl.className = 'menu_ico';
-    iconEl.style.display = 'inline-block';
-    iconEl.style.verticalAlign = 'top';
-    iconEl.style.padding = iconURI ? '1px 7px 0 6px' : '1px 8px 0 0';
-    iconEl.style.minHeight = '22px';
-    if (iconURI) {
-        const image = document.createElement('img');
-        image.src = iconURI;
-        image.width = '16';
-        image.height = '16';
-        image.border = '0';
-        iconEl.appendChild(image);
-    }
-    button.appendChild(iconEl);
-    const textNode = document.createTextNode(text);
-    button.appendChild(textNode);
-    return button;
-}
+  };
+  const iconEl = document.createElement('div');
+  iconEl.className = 'menu_ico';
+  iconEl.style.display = 'inline-block';
+  iconEl.style.verticalAlign = 'top';
+  iconEl.style.padding = iconURI ? '1px 7px 0 6px' : '1px 8px 0 0';
+  iconEl.style.minHeight = '22px';
+  if (iconURI) {
+    const image = document.createElement('img');
+    image.src = iconURI;
+    image.width = '16';
+    image.height = '16';
+    image.border = '0';
+    iconEl.appendChild(image);
+  }
+  button.appendChild(iconEl);
+  const textNode = document.createTextNode(text);
+  button.appendChild(textNode);
+  return button;
+};
 
 const fetchButton = createSteamButton('Load whole match history');
 fetchButton.onclick = () => {
-    fetchMatchHistory();
-    fetchButton.onclick = () => {
-        updateStatus('This button was already pressed. Reload the page if you want to start over.');
-    }
-}
+  fetchMatchHistory();
+  fetchButton.onclick = () => {
+    updateStatus(
+      'This button was already pressed. Reload the page if you want to start over.'
+    );
+  };
+};
 menu.appendChild(fetchButton);
 
 const checkBansButton = createSteamButton('Check loaded matches for bans');
 checkBansButton.onclick = () => {
-    checkLoadedMatchesForBans();
-    if (!providedCustomAPIKey) checkBansButton.onclick = null;
-}
+  checkLoadedMatchesForBans();
+  if (!providedCustomAPIKey) checkBansButton.onclick = null;
+};
 chrome.storage.sync.get(['customapikey'], data => {
-    if (typeof data.customapikey === 'undefined'){
-        const defaultkeys = [
-            '5DA40A4A4699DEE30C1C9A7BCE84C914',
-            '5970533AA2A0651E9105E706D0F8EDDC',
-            '2B3382EBA9E8C1B58054BD5C5EE1C36A',
-        ];
-        apikey = defaultkeys[Math.floor(Math.random() * 3)];
-        statusBar.textContent = 'Only 100 players from the most recent matches will be scanned without providing your own API key!'
-    } else {
-        providedCustomAPIKey = true;
-        apikey = data.customapikey;
-    }
-    fetchButton.insertAdjacentElement('afterend', checkBansButton);
+  if (typeof data.customapikey === 'undefined') {
+    const defaultkeys = [
+      '5DA40A4A4699DEE30C1C9A7BCE84C914',
+      '5970533AA2A0651E9105E706D0F8EDDC',
+      '2B3382EBA9E8C1B58054BD5C5EE1C36A'
+    ];
+    apikey = defaultkeys[Math.floor(Math.random() * 3)];
+    statusBar.textContent =
+      'Only 100 players from the most recent matches will be scanned without providing your own API key!';
+  } else {
+    providedCustomAPIKey = true;
+    apikey = data.customapikey;
+  }
+  fetchButton.insertAdjacentElement('afterend', checkBansButton);
 });
-
 
 menu.appendChild(statusBar);
 menu.appendChild(funStatsBar);
@@ -493,46 +587,45 @@ document.querySelector('.load_more_history_area').appendChild(loadMoreButton);
 document.querySelector('.load_more_history_area a').remove();
 loadMoreButton.onclick = () => fetchMatchHistoryPage(false, null, maxRetries);
 
-
 // embed settings
 let settingsInjected = false;
 const showSettings = () => {
-    if (settingsInjected) {
-        const settingsShade = document.getElementById('settingsShade');
-        const settingsDiv = document.getElementById('settingsDiv');
-        settingsShade.className = 'fadeIn';
-        settingsDiv.className = 'fadeIn';
-    } else {
-        settingsInjected = true;
-        fetch(chrome.extension.getURL('/options.html'))
-            .then((resp) => resp.text())
-            .then(settingsHTML => {
-                const settingsDiv = document.createElement('div');
-                settingsDiv.id = 'settingsDiv';
-                settingsDiv.innerHTML = settingsHTML;
-                document.body.appendChild(settingsDiv);
-                const settingsShade = document.createElement('div');
-                settingsShade.id = 'settingsShade';
-                settingsShade.addEventListener('click', hideSettings);
-                document.body.appendChild(settingsShade);
-                initOptions();
-                showSettings();
-            });
-    }
-}
-const hideSettings = () => {
+  if (settingsInjected) {
     const settingsShade = document.getElementById('settingsShade');
     const settingsDiv = document.getElementById('settingsDiv');
-    settingsShade.className = 'fadeOut';
-    settingsDiv.className = 'fadeOut';
-    chrome.storage.sync.get(['customapikey'], data => {
-        if (typeof data.customapikey !== 'undefined' && !providedCustomAPIKey) {
-            location.reload();
-        } else {
-            updateStatus('Reload the page if you changed API key!');
-        }
-    });
-}
+    settingsShade.className = 'fadeIn';
+    settingsDiv.className = 'fadeIn';
+  } else {
+    settingsInjected = true;
+    fetch(chrome.extension.getURL('/options.html'))
+      .then(resp => resp.text())
+      .then(settingsHTML => {
+        const settingsDiv = document.createElement('div');
+        settingsDiv.id = 'settingsDiv';
+        settingsDiv.innerHTML = settingsHTML;
+        document.body.appendChild(settingsDiv);
+        const settingsShade = document.createElement('div');
+        settingsShade.id = 'settingsShade';
+        settingsShade.addEventListener('click', hideSettings);
+        document.body.appendChild(settingsShade);
+        initOptions();
+        showSettings();
+      });
+  }
+};
+const hideSettings = () => {
+  const settingsShade = document.getElementById('settingsShade');
+  const settingsDiv = document.getElementById('settingsDiv');
+  settingsShade.className = 'fadeOut';
+  settingsDiv.className = 'fadeOut';
+  chrome.storage.sync.get(['customapikey'], data => {
+    if (typeof data.customapikey !== 'undefined' && !providedCustomAPIKey) {
+      location.reload();
+    } else {
+      updateStatus('Reload the page if you changed API key!');
+    }
+  });
+};
 const bancheckerSettingsButton = createSteamButton('Set Steam API key');
 bancheckerSettingsButton.onclick = () => showSettings();
 statusBar.insertAdjacentElement('beforeBegin', bancheckerSettingsButton);

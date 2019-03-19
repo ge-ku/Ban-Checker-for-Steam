@@ -10,15 +10,16 @@ if (chrome) {
 }
 
 const actions = {
-  'csgo-matches': 'https://steamcommunity.com/my/gcpd/730?tab=matchhistorycompetitive',
+  'csgo-matches':
+    'https://steamcommunity.com/my/gcpd/730?tab=matchhistorycompetitive',
   'community-friends': 'https://steamcommunity.com/my/friends/',
   'community-groups': 'https://steamcommunity.com/my/groups/',
-  'github': 'https://github.com/ge-ku/Ban-Checker-for-Steam',
+  github: 'https://github.com/ge-ku/Ban-Checker-for-Steam',
   'community-recently': 'https://steamcommunity.com/my/friends/coplay/'
 };
 const context_listener = (info, tab) => {
   if (info.menuItemId in actions) {
-    tabs_api.create({'url':actions[info.menuItemId]});
+    tabs_api.create({ url: actions[info.menuItemId] });
   }
 };
 const context_defs = [
@@ -52,8 +53,8 @@ const context_defs = [
     title: 'Github page'
   }
 ];
-context_defs.forEach((context) => {
-  context['contexts'] = ['browser_action','page_action'];
+context_defs.forEach(context => {
+  context['contexts'] = ['browser_action', 'page_action'];
   context_api.create(context);
-})
+});
 context_api.onClicked.addListener(context_listener);
