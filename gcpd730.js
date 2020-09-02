@@ -89,8 +89,16 @@ const initVariables = () => {
     updateStatus('Error: g_sGcContinueToken was not found');
   }
   continue_token = matchContinueToken[1];
-  const steamSessionScript = document.querySelector('#global_header+script');
-  const matchSessionID = steamSessionScript.text.match(/g_sessionID = "(.+)"/);
+ const ScriptTags = document.querySelectorAll('script');
+	var matchSessionID = false
+	for( let  i = 0; i < ScriptTags.length; i++){
+
+		var g_sessionID = ScriptTags[i].text.match(/g_sessionID = "(.+)"/);
+		if(g_sessionID != null){
+			matchSessionID = g_sessionID;
+			break;
+		}
+	}
   if (!matchSessionID) {
     updateStatus('Error: g_sessionID was not found');
   }
