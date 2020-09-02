@@ -89,16 +89,15 @@ const initVariables = () => {
     updateStatus('Error: g_sGcContinueToken was not found');
   }
   continue_token = matchContinueToken[1];
- const ScriptTags = document.querySelectorAll('script');
-	var matchSessionID = false
-	for( let  i = 0; i < ScriptTags.length; i++){
-
-		var g_sessionID = ScriptTags[i].text.match(/g_sessionID = "(.+)"/);
-		if(g_sessionID != null){
-			matchSessionID = g_sessionID;
-			break;
-		}
-	}
+  const scriptTags = document.querySelectorAll('script');
+  let matchSessionID = false;
+  for (const scriptTag of scriptTags) {
+    let g_sessionID = scriptTag.text.match(/g_sessionID = "(.+)"/);
+    if (g_sessionID != null) {
+      matchSessionID = g_sessionID;
+      break;
+    }
+  }
   if (!matchSessionID) {
     updateStatus('Error: g_sessionID was not found');
   }
@@ -300,8 +299,9 @@ const fetchMatchHistoryPage = (recursively, page, retryCount) => {
         `Error while loading match history:\n${error}` +
           `${
             retryCount !== undefined && retryCount > 0
-              ? `\n\nRetrying to fetch page... ${maxRetries -
-                  retryCount}/${maxRetries}`
+              ? `\n\nRetrying to fetch page... ${
+                  maxRetries - retryCount
+                }/${maxRetries}`
               : `\n\nCouldn't load data after ${maxRetries} retries :(`
           }`
       );
@@ -342,9 +342,7 @@ const checkBans = players => {
   const fetchBatch = (i, retryCount) => {
     updateStatus(
       `Loaded unchecked matches contain ${uniquePlayers.length} players.\n` +
-        `We can scan 100 players at a time so we're sending ${
-          batches.length
-        } ` +
+        `We can scan 100 players at a time so we're sending ${batches.length} ` +
         `request${batches.length > 1 ? 's' : ''}.\n` +
         `${i} successful request${i === 1 ? '' : 's'} so far...`
     );
@@ -409,9 +407,7 @@ const checkBans = players => {
               }
               verdictEl.style.cursor = 'help';
               verdictEl.textContent = verdict;
-              verdictEl.title = `Days since last ban: ${
-                player.DaysSinceLastBan
-              }`;
+              verdictEl.title = `Days since last ban: ${player.DaysSinceLastBan}`;
             } else {
               verdictEl.textContent = '';
             }
@@ -427,16 +423,10 @@ const checkBans = players => {
         } else {
           updateStatus(
             `Looks like we're done.\n\n` +
-              `There were ${
-                banStats.recentBans
-              } players who got banned after playing with you!\n\n` +
-              `Total ban stats: ${banStats.vacBans} VAC banned and ${
-                banStats.gameBans
-              } ` +
+              `There were ${banStats.recentBans} players who got banned after playing with you!\n\n` +
+              `Total ban stats: ${banStats.vacBans} VAC banned and ${banStats.gameBans} ` +
               `Game banned players in games we scanned (a lot of these could happen outside of CS:GO.)\n` +
-              `Total amount of unique players encountered: ${
-                uniquePlayers.length
-              }` +
+              `Total amount of unique players encountered: ${uniquePlayers.length}` +
               `\n\nHover over ban status to check how many days have passed since last ban.`
           );
         }
