@@ -5,6 +5,9 @@ let tabURIparam = 'matchhistorycompetitive';
 
 const maxRetries = 3;
 
+let loadingWholeHistoryCounter = 0;
+let loadingWholeHistory = false;
+
 let providedCustomAPIKey = false;
 let apikey = '';
 
@@ -23,6 +26,9 @@ const funStats = {
   totalWaitTime: 0,
   totalTime: 0
 };
+
+let waitTimeRowIndex = 3;
+let timeRowIndex = 4;
 
 const getSteamID64 = minProfile =>
   '76' + (parseInt(minProfile) + 561197960265728);
@@ -106,6 +112,12 @@ const initVariables = () => {
   if (tabOnEl) {
     tabURIparam = tabOnEl.parentNode.id.split('_').pop();
   }
+
+  if (tabURIparam === 'matchhistoryscrimmage') {
+    waitTimeRowIndex = 2;
+    timeRowIndex = 3;
+  }
+
   if (typeof content !== 'undefined') fetch = content.fetch; // fix for Firefox with disabled third-party cookies
 };
 
@@ -120,6 +132,7 @@ funStatsBar.style.left = '0';
 funStatsBar.style.bottom = '0';
 funStatsBar.style.margin = '4px';
 funStatsBar.style.zIndex = '9';
+
 const updateStats = () => {
   if (tabURIparam === 'playerreports' || tabURIparam === 'playercommends')
     return;
@@ -146,9 +159,9 @@ const updateStats = () => {
       if (data.includes(':')) {
         const i = data.indexOf(':');
         const value = data.substr(i + 1);
-        if (index === 2) {
+        if (index === waitTimeRowIndex) {
           funStats.totalWaitTime += parseTime(value);
-        } else if (index === 3) {
+        } else if (index === timeRowIndex) {
           funStats.totalTime += parseTime(value);
         }
       }
@@ -199,8 +212,8 @@ const formatMatchTables = () => {
       .forEach(report => {
         const dateEl = report.querySelector('td:first-child');
         const daysSinceMatch = daysSince(dateEl.textContent);
-        const minProfile = report.querySelector('.linkTitle').dataset
-          .miniprofile;
+        const minProfile =
+          report.querySelector('.linkTitle').dataset.miniprofile;
         report.dataset.steamid64 = getSteamID64(minProfile);
         report.dataset.dayssince = daysSinceMatch;
         report.classList.add('banchecker-profile');
@@ -229,103 +242,24 @@ const formatMatchTables = () => {
   }
 };
 
-const fetchMatchHistoryPage = (recursively, page, retryCount) => {
-  document.querySelector('#load_more_button').style.display = 'none';
-  document.querySelector('#inventory_history_loading').style.display = 'block';
-  fetch(
-    `${profileURI}gcpd/730?ajax=1&tab=${tabURIparam}&continue_token=${continue_token}&sessionid=${sessionid}`,
-    {
-      credentials: 'include'
-    }
-  )
-    .then(res => {
-      if (res.ok) {
-        const contentType = res.headers.get('content-type');
-        if (contentType && contentType.indexOf('application/json') !== -1) {
-          return res.json();
-        } else {
-          return res.text();
-        }
-      } else {
-        throw Error(`Code ${res.status}. ${res.statusText}`);
-      }
-    })
-    .then(json => {
-      if (!json.success) {
-        throw Error(
-          'error getting valid JSON in response to\n' +
-            `${profileURI}gcpd/730?ajax=1&tab=${tabURIparam}&continue_token=${continue_token}&sessionid=${sessionid}`
-        );
-      }
-      if (json.continue_token) {
-        continue_token = json.continue_token;
-      } else {
-        updateStatus(
-          'No continue_token returned from Steam, looks like there are no more matches to load!'
-        );
-        continue_token = null;
-      }
-      const parser = new DOMParser(); // todo: don't create new parser for each request
-      const newData = parser.parseFromString(json.html, 'text/html');
-      let elementsToAppend = '.csgo_scoreboard_root > tbody > tr';
-      let elementToAppendTo = '.csgo_scoreboard_root';
-      if (tabURIparam === 'playerreports' || tabURIparam === 'playercommends') {
-        elementsToAppend = 'tbody > tr';
-        elementToAppendTo = '.generic_kv_table tbody';
-      }
-      newData.querySelectorAll(elementsToAppend).forEach((tr, i) => {
-        if (i > 0) document.querySelector(elementToAppendTo).appendChild(tr);
-      });
-      updateStats();
-      formatMatchTables();
-      if (recursively && continue_token) {
-        updateStatus(`Loaded ${page ? page + 1 : 1} page${page ? 's' : ''}...`);
-        fetchMatchHistoryPage(true, page ? page + 1 : 1, maxRetries);
-      } else {
-        updateStatus('');
-        if (!continue_token) {
-          document.querySelector('#inventory_history_loading').style.display =
-            'none';
-        } else {
-          document.querySelector('#load_more_button').style.display =
-            'inline-block';
-          document.querySelector('#inventory_history_loading').style.display =
-            'none';
-        }
-      }
-    })
-    .catch(error => {
-      updateStatus(
-        `Error while loading match history:\n${error}` +
-          `${
-            retryCount !== undefined && retryCount > 0
-              ? `\n\nRetrying to fetch page... ${
-                  maxRetries - retryCount
-                }/${maxRetries}`
-              : `\n\nCouldn't load data after ${maxRetries} retries :(`
-          }`
-      );
-      if (retryCount > 0) {
-        setTimeout(
-          () => fetchMatchHistoryPage(true, page, retryCount - 1),
-          3000
-        );
-      }
-      document.querySelector('#load_more_button').style.display =
-        'inline-block';
-      document.querySelector('#inventory_history_loading').style.display =
-        'none';
-    });
-};
-
 const fetchMatchHistory = () => {
-  if (continue_token && sessionid && profileURI) {
-    console.log(
-      `First continue token: ${continue_token} | SessionID: ${sessionid} | Profile: ${profileURI}`
-    );
-    updateStatus('Loading Match history...');
-    fetchMatchHistoryPage(true, 1, maxRetries);
-  }
+  updateStatus('Loading Match history...');
+  loadingWholeHistory = true;
+  const continueTextEl = document.querySelector(
+    '#load_more_button_continue_text'
+  );
+  const callback = (mutationList, observer) => {
+    for (const mutation of mutationList) {
+      if (mutation.attributeName === 'style') {
+        if (loadMoreButton.style.display === 'none') {
+          updateStatus('Looks like we fetched all available matches!', true);
+        }
+      }
+    }
+  };
+  const continueTextObserver = new MutationObserver(callback);
+  continueTextObserver.observe(continueTextEl, { attributes: true });
+  document.querySelector('#load_more_button').click();
 };
 
 const checkBans = players => {
@@ -417,8 +351,9 @@ const checkBans = players => {
           setTimeout(() => fetchBatch(i + 1), 1000);
         } else if (batches.length > i + 1 && !providedCustomAPIKey) {
           updateStatus(
-            'You did not provide your own Steam API key, only 100 players were scanned!',
-            true
+            `Looks like we're done.\n\n` +
+              `Loaded unchecked matches contain ${uniquePlayers.length} players.\n` +
+              'You did not provide your own Steam API key, only 100 players were scanned!'
           );
         } else {
           updateStatus(
@@ -579,10 +514,28 @@ initVariables();
 formatMatchTables();
 updateStats();
 
-const loadMoreButton = document.querySelector('#load_more_button');
-document.querySelector('.load_more_history_area').appendChild(loadMoreButton);
-document.querySelector('.load_more_history_area a').remove();
-loadMoreButton.onclick = () => fetchMatchHistoryPage(false, null, maxRetries);
+const loadMoreButton = document.querySelector(
+  '.load_more_history_area #load_more_clickable'
+);
+const callback = (mutationList, observer) => {
+  for (const mutation of mutationList) {
+    if (mutation.attributeName === 'style') {
+      if (loadMoreButton.style.display !== 'none') {
+        formatMatchTables();
+        updateStats();
+        if (loadingWholeHistory) {
+          loadingWholeHistoryCounter++;
+          updateStatus(
+            `Loading Match history... Pages loaded: ${loadingWholeHistoryCounter}`
+          );
+          loadMoreButton.click();
+        }
+      }
+    }
+  }
+};
+const observer = new MutationObserver(callback);
+observer.observe(loadMoreButton, { attributes: true });
 
 // embed settings
 let settingsInjected = false;
