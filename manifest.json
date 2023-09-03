@@ -1,7 +1,7 @@
 {
   "name": "Ban Checker for Steam",
   "description": "Automatically check bans of people you recently played with, your friends, and group members.",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "icons": {
     "16": "icons/ow16.png",
     "48": "icons/ow48.png",
@@ -51,6 +51,8 @@
       "matches": [
         "*://steamcommunity.com/id/*/gcpd/730*tab=matchhistorycompetitive",
         "*://steamcommunity.com/profiles/*/gcpd/730*tab=matchhistorycompetitive",
+        "*://steamcommunity.com/id/*/gcpd/730*tab=matchhistorypremier",
+        "*://steamcommunity.com/profiles/*/gcpd/730*tab=matchhistorypremier",
         "*://steamcommunity.com/id/*/gcpd/730*tab=matchhistorywingman",
         "*://steamcommunity.com/profiles/*/gcpd/730*tab=matchhistorywingman",
         "*://steamcommunity.com/id/*/gcpd/730*tab=matchhistoryscrimmage",

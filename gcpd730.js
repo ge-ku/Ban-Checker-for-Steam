@@ -84,30 +84,35 @@ const initVariables = () => {
     updateStatus(
       'No "LOAD MORE HISTORY" button is present, seems like there are no more matches'
     );
-  }
-  const steamContinueScript = document.querySelector(
-    '#personaldata_elements_container+script'
-  );
-  const matchContinueToken = steamContinueScript.text.match(
-    /g_sGcContinueToken = '(\d+)'/
-  );
-  if (!matchContinueToken) {
-    updateStatus('Error: g_sGcContinueToken was not found');
-  }
-  continue_token = matchContinueToken[1];
-  const scriptTags = document.querySelectorAll('script');
-  let matchSessionID = false;
-  for (const scriptTag of scriptTags) {
-    let g_sessionID = scriptTag.text.match(/g_sessionID = "(.+)"/);
-    if (g_sessionID != null) {
-      matchSessionID = g_sessionID;
-      break;
+  } else {
+    const steamContinueScript = document.querySelector(
+      '#personaldata_elements_container+script'
+    );
+    const matchContinueToken = steamContinueScript?.text.match(
+      /g_sGcContinueToken = '(\d+)'/
+    );
+
+    let matchSessionID = false;
+    if (!matchContinueToken) {
+      updateStatus('Error: g_sGcContinueToken was not found');
+    } else {
+      continue_token = matchContinueToken[1];
+      const scriptTags = document.querySelectorAll('script');
+      for (const scriptTag of scriptTags) {
+        let g_sessionID = scriptTag.text.match(/g_sessionID = "(.+)"/);
+        if (g_sessionID != null) {
+          matchSessionID = g_sessionID;
+          break;
+        }
+      }
+    }
+    if (!matchSessionID) {
+      updateStatus('Error: g_sessionID was not found');
+    } else {
+      sessionid = matchSessionID[1];
     }
   }
-  if (!matchSessionID) {
-    updateStatus('Error: g_sessionID was not found');
-  }
-  sessionid = matchSessionID[1];
+
   const tabOnEl = document.querySelector('.tabOn');
   if (tabOnEl) {
     tabURIparam = tabOnEl.parentNode.id.split('_').pop();
@@ -168,17 +173,31 @@ const updateStats = () => {
     });
     matchData.classList.add('banchecker-counted');
   });
+
+  let matchesWon = 0;
+  let matchesLost = 0;
+  let matchesTied = 0;
+  document
+    .querySelectorAll(
+      `.inner_name .playerAvatar a[href="${profileURItrimmed}"]`
+    )
+    .forEach(anchorEl => {
+      const row = anchorEl.closest('tr');
+      if (row.classList.contains('banchecker-matchresult-tie')) matchesTied++;
+      if (row.classList.contains('banchecker-matchresult-win')) matchesWon++;
+      if (row.classList.contains('banchecker-matchresult-lose')) matchesLost++;
+    });
+
   funStatsBar.textContent =
-    'Some fun stats for loaded matches:\n' +
+    'Some fun stats for loaded matches\n\n' +
     `Number of matches: ${funStats.numberOfMatches}\n` +
-    `Total kills: ${funStats.totalKills}\n` +
-    `Total assists: ${funStats.totalAssists}\n` +
-    `Total deaths: ${funStats.totalDeaths}\n` +
+    `Won: ${matchesWon} | Lost: ${matchesLost} | Tied: ${matchesTied}\n\n` +
+    `Kills: ${funStats.totalKills} | Deaths: ${funStats.totalDeaths} | Assists: ${funStats.totalAssists}\n\n` +
     `K/D: ${(funStats.totalKills / funStats.totalDeaths).toFixed(3)} | ` +
     `(K+A)/D: ${(
       (funStats.totalKills + funStats.totalAssists) /
       funStats.totalDeaths
-    ).toFixed(3)}\n` +
+    ).toFixed(3)}\n\n` +
     `Total wait time: ${timeString(funStats.totalWaitTime)}\n` +
     `Total match time: ${timeString(funStats.totalTime)}`;
 };
@@ -237,6 +256,30 @@ const formatMatchTables = () => {
           tr.dataset.dayssince = daysSinceMatch;
           tr.classList.add('banchecker-profile');
         });
+
+        const scoreboard = table.querySelector('.csgo_scoreboard_score');
+        if (scoreboard) {
+          const scores = scoreboard.textContent
+            .split(' : ')
+            .map(s => Number(s));
+          if (scores[0] === scores[1]) {
+            table.querySelectorAll('tbody > tr').forEach((tr, i) => {
+              if (i === 0 || tr.childElementCount < 3) return;
+              tr.classList.add('banchecker-matchresult-tie');
+            });
+          } else {
+            let matchresult = scores[0] > scores[1] ? 'win' : 'lose';
+            table.querySelectorAll('tbody > tr').forEach((tr, i) => {
+              if (tr.querySelector('.csgo_scoreboard_score')) {
+                // flip result for rows after scoreboard
+                matchresult = scores[0] > scores[1] ? 'lose' : 'win';
+              }
+              if (i === 0 || tr.childElementCount < 3) return;
+              tr.classList.add(`banchecker-matchresult-${matchresult}`);
+            });
+          }
+        }
+
         table.classList.add('banchecker-formatted');
       });
   }
@@ -517,25 +560,28 @@ updateStats();
 const loadMoreButton = document.querySelector(
   '.load_more_history_area #load_more_clickable'
 );
-const callback = (mutationList, observer) => {
-  for (const mutation of mutationList) {
-    if (mutation.attributeName === 'style') {
-      if (loadMoreButton.style.display !== 'none') {
-        formatMatchTables();
-        updateStats();
-        if (loadingWholeHistory) {
-          loadingWholeHistoryCounter++;
-          updateStatus(
-            `Loading Match history... Pages loaded: ${loadingWholeHistoryCounter}`
-          );
-          loadMoreButton.click();
+
+if (loadMoreButton) {
+  const callback = (mutationList, observer) => {
+    for (const mutation of mutationList) {
+      if (mutation.attributeName === 'style') {
+        if (loadMoreButton.style.display !== 'none') {
+          formatMatchTables();
+          updateStats();
+          if (loadingWholeHistory) {
+            loadingWholeHistoryCounter++;
+            updateStatus(
+              `Loading Match history... Pages loaded: ${loadingWholeHistoryCounter}`
+            );
+            loadMoreButton.click();
+          }
         }
       }
     }
-  }
-};
-const observer = new MutationObserver(callback);
-observer.observe(loadMoreButton, { attributes: true });
+  };
+  const observer = new MutationObserver(callback);
+  observer.observe(loadMoreButton, { attributes: true });
+}
 
 // embed settings
 let settingsInjected = false;
