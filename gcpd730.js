@@ -292,16 +292,21 @@ const fetchMatchHistory = () => {
   );
   const callback = (mutationList, observer) => {
     for (const mutation of mutationList) {
-      if (mutation.attributeName === 'style') {
-        if (loadMoreButton.style.display === 'none') {
-          updateStatus('Looks like we fetched all available matches!', true);
-        }
+      if (
+        mutation.attributeName === 'style' &&
+        continueTextEl.style.display === 'none'
+      ) {
+        updateStatus('Looks like we fetched all available matches!', true);
       }
     }
   };
   const continueTextObserver = new MutationObserver(callback);
   continueTextObserver.observe(continueTextEl, { attributes: true });
-  document.querySelector('#load_more_button').click();
+  if (loadMoreButton.style.display === 'none') {
+    updateStatus('No more matches to load!', true);
+  } else {
+    document.querySelector('#load_more_button').click();
+  }
 };
 
 const checkBans = players => {
@@ -562,6 +567,9 @@ const loadMoreButton = document.querySelector(
 const loadingElement = document.querySelector('#inventory_history_loading');
 
 if (loadMoreButton && loadingElement) {
+  const continueTextElement = document.querySelector(
+    '#load_more_button_continue_text'
+  );
   const callback = (mutationList, observer) => {
     for (const mutation of mutationList) {
       if (
@@ -571,6 +579,7 @@ if (loadMoreButton && loadingElement) {
         formatMatchTables();
         updateStats();
         if (loadingWholeHistory) {
+          if (continueTextElement.style.display === 'none') return;
           loadingWholeHistoryCounter++;
           updateStatus(
             `Loading Match history... Pages loaded: ${loadingWholeHistoryCounter}`
