@@ -10,8 +10,10 @@ if (chrome) {
 }
 
 const actions = {
-  'csgo-matches':
+  'cs-competitive-matches':
     'https://steamcommunity.com/my/gcpd/730?tab=matchhistorycompetitive',
+  'cs-premier-matches':
+    'https://steamcommunity.com/my/gcpd/730?tab=matchhistorypremier',
   'community-friends': 'https://steamcommunity.com/my/friends/',
   'community-groups': 'https://steamcommunity.com/my/groups/',
   github: 'https://github.com/ge-ku/Ban-Checker-for-Steam',
@@ -39,12 +41,16 @@ const context_defs = [
     title: 'Recently Played With'
   },
   {
-    id: 'csgo-matches',
+    id: 'cs-premier-matches',
     type: 'normal',
-    title: 'CS:GO match history'
+    title: 'Counter-Strike Premier Matches'
   },
   {
-    id: 'separator-1',
+    id: 'cs-competitive-matches',
+    type: 'normal',
+    title: 'Counter-Strike Competitive Matches'
+  },
+  {
     type: 'separator'
   },
   {
