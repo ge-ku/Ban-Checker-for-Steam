@@ -173,7 +173,6 @@ const updateStats = () => {
     });
     matchData.classList.add('banchecker-counted');
   });
-
   let matchesWon = 0;
   let matchesLost = 0;
   let matchesTied = 0;
@@ -560,27 +559,29 @@ updateStats();
 const loadMoreButton = document.querySelector(
   '.load_more_history_area #load_more_clickable'
 );
+const loadingElement = document.querySelector('#inventory_history_loading');
 
-if (loadMoreButton) {
+if (loadMoreButton && loadingElement) {
   const callback = (mutationList, observer) => {
     for (const mutation of mutationList) {
-      if (mutation.attributeName === 'style') {
-        if (loadMoreButton.style.display !== 'none') {
-          formatMatchTables();
-          updateStats();
-          if (loadingWholeHistory) {
-            loadingWholeHistoryCounter++;
-            updateStatus(
-              `Loading Match history... Pages loaded: ${loadingWholeHistoryCounter}`
-            );
-            loadMoreButton.click();
-          }
+      if (
+        mutation.attributeName === 'style' &&
+        loadingElement.style.display === 'none'
+      ) {
+        formatMatchTables();
+        updateStats();
+        if (loadingWholeHistory) {
+          loadingWholeHistoryCounter++;
+          updateStatus(
+            `Loading Match history... Pages loaded: ${loadingWholeHistoryCounter}`
+          );
+          loadMoreButton.click();
         }
       }
     }
   };
   const observer = new MutationObserver(callback);
-  observer.observe(loadMoreButton, { attributes: true });
+  observer.observe(loadingElement, { attributes: true });
 }
 
 // embed settings
