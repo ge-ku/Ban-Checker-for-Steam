@@ -51,9 +51,6 @@ const context_defs = [
     title: 'Counter-Strike Competitive Matches'
   },
   {
-    type: 'separator'
-  },
-  {
     id: 'github',
     type: 'normal',
     title: 'Github page'
