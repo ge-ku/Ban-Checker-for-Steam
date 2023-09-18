@@ -603,7 +603,7 @@ const showSettings = () => {
     settingsDiv.className = 'fadeIn';
   } else {
     settingsInjected = true;
-    fetch(chrome.extension.getURL('/options.html'))
+    fetch(chrome.runtime.getURL('/options.html'))
       .then(resp => resp.text())
       .then(settingsHTML => {
         const settingsDiv = document.createElement('div');

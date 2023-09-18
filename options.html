@@ -7,15 +7,29 @@
     #settingsBody {
       padding: 1em;
     }
+
     #statusSaved {
       visibility: hidden;
+    }
+
+    @media (prefers-color-scheme: dark) {
+
+      #settingsBody {
+        background-color: #434344;
+        color: white;
+      }
+
+      #settingsBody a {
+        color: white;
+        font-weight: bold;
+      }
     }
   </style>
 </head>
 
 <body id="settingsBody">
   Custom API key:
-  <input type="text" id="customapikey" size="35">
+  <input type="text" id="customapikey" size="40">
   <form>
     <label><input type="radio" name="usecustom" id="radioCustom">Use custom API Key</label>
     <br>

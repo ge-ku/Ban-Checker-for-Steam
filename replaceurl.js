@@ -1,11 +1,13 @@
-javascript:(function(){
-	var groupRegex = new RegExp(".*#members.*");
-	var links = document.getElementsByTagName("a");
-	for(var i = 0; i < links.length; i++)
-    {
-        if (groupRegex.test(links[i].href))
-		{
-			links[i].href = links[i].href.replace("#members", "/members");
-		}
+javascript: (() => {
+  const groupRegex = new RegExp('.*members.*');
+  const links = document.getElementsByTagName('a');
+  for (const link of links) {
+    if (groupRegex.test(link.href)) {
+      console.log(link);
+      link.addEventListener('click', e => {
+        window.location = e.currentTarget.href;
+      });
+      link.href = link.href.replace('#members', '/members');
     }
+  }
 })();

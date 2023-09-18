@@ -1,7 +1,7 @@
 {
   "name": "Ban Checker for Steam",
   "description": "Automatically check bans of people you recently played with, your friends, and group members.",
-  "version": "1.2.8",
+  "version": "1.3.0",
   "icons": {
     "16": "icons/ow16.png",
     "48": "icons/ow48.png",
@@ -10,19 +10,23 @@
   "permissions": [
     "storage",
     "alarms",
-    "contextMenus",
+    "contextMenus"    
+  ],
+  "host_permissions": [
     "*://steamcommunity.com/*",
     "https://api.steampowered.com/*"
   ],
   "optional_permissions": ["notifications"],
   "options_ui": {
-    "page": "options.html",
-    "chrome_style": true
+    "page": "options.html"
   },
-  "web_accessible_resources": ["options.html", "icons/*.svg"],
+  "web_accessible_resources": [{
+    "resources": ["options.html", "icons/*.svg"],
+    "matches": ["<all_urls>"]
+  }],
   "content_scripts": [
     {
-      "js": ["checkbans.js", "options.js", "display.js"],
+      "js": ["checkbans.js", "options.js"],
       "css": ["display.css"],
       "run_at": "document_end",
       "matches": [
@@ -64,11 +68,18 @@
         "*://steamcommunity.com/id/*/gcpd/730*tab=playercommends",
         "*://steamcommunity.com/profiles/*/gcpd/730*tab=playercommends"
       ]
+    },
+    {
+      "js": ["csrating.js"],
+      "run_at": "document_end",
+      "matches": [
+        "*://steamcommunity.com/id/*/gcpd/730?tab=majors",
+        "*://steamcommunity.com/profiles/*/gcpd/730?tab=majors"
+      ]
     }
   ],
   "background": {
-    "scripts": ["history.js", "contextmenus.js", "checkbans-fetcher.js"],
-    "persistent": false
+    "service_worker": "service_worker.js"
   },
-  "manifest_version": 2
+  "manifest_version": 3
 }

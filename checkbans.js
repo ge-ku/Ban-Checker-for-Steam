@@ -60,7 +60,7 @@ checkBans = () => {
       if (verdict) {
         const verdictElIcon = document.createElement('div');
         const verdictElIconImg = document.createElement('img');
-        verdictElIconImg.src = chrome.extension.getURL(`icons/${icon}`);
+        verdictElIconImg.src = chrome.runtime.getURL(`icons/${icon}`);
         verdictElIcon.appendChild(verdictElIconImg);
         const verdictElText = document.createElement('span');
         verdictElText.textContent = verdict;
@@ -85,8 +85,9 @@ checkBans = () => {
             `Error while scanning players for bans:\n${error}` +
               `${
                 retryCount !== undefined && retryCount > 0
-                  ? `\n\nRetrying to scan... ${maxRetries -
-                      retryCount}/${maxRetries}`
+                  ? `\n\nRetrying to scan... ${
+                      maxRetries - retryCount
+                    }/${maxRetries}`
                   : `\n\nCouldn't scan for bans after ${maxRetries} retries :(`
               }`
           );
