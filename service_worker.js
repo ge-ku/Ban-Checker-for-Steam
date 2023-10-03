@@ -19,7 +19,7 @@ chrome.runtime.onInstalled.addListener(() => {
     },
     {
       id: 'cs-competitive-matches',
-      title: 'Counter-Strike Competitive Matches'
+      title: 'Counter-Strike Ranked Competitive Matches'
     },
     {
       id: 'github',
@@ -34,7 +34,7 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   const actions = {
     'cs-competitive-matches':
-      'https://steamcommunity.com/my/gcpd/730?tab=matchhistorycompetitive',
+      'https://steamcommunity.com/my/gcpd/730?tab=matchhistorycompetitivepermap',
     'cs-premier-matches':
       'https://steamcommunity.com/my/gcpd/730?tab=matchhistorypremier',
     'community-friends': 'https://steamcommunity.com/my/friends/',
