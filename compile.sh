@@ -25,8 +25,11 @@ cd temp;
 zip -r "../Banchecker_Chrome_${VERSION}.zip" .;
 
 echo "Adding extra lines into manifest file needed for Firefox...";
-firefox_specific_bits='\  \"applications\": {\n\    \"gecko\": {\n\      \"id\": \"banchecker@kuzmenko.io\",\n\      \"strict_min_version\": \"48.0\"\n\    }\n\  },';
+firefox_specific_bits='\  \"browser_specific_settings\": {\n\    \"gecko\": {\n\      \"id\": \"banchecker@kuzmenko.io\",\n\    }\n\  },';
 sed -i "/\"manifest_version\": 3/i $firefox_specific_bits" manifest.json;
+
+# Fix for Firefox not suppoting background.service_worker
+sed -i -e 's/"service_worker": "service_worker.js"/"scripts": ["service_worker.js"]/g' manifest.json
 
 echo "Moving everything into Banchecker_Firefox_${VERSION}.zip...";
 zip -r "../Banchecker_Firefox_${VERSION}.zip" .;

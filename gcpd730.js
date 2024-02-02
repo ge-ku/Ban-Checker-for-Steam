@@ -382,10 +382,13 @@ const checkBans = players => {
           }
           playerEls.forEach(playerEl => {
             playerEl.classList.add('banchecker-checked');
-            verdictEl = playerEl.querySelector('.banchecker-bans');
+            const verdictEl = playerEl.querySelector('.banchecker-bans');
             if (verdict) {
               if (daySinceLastMatch > player.DaysSinceLastBan) {
                 verdictEl.style.color = 'red';
+                playerEl
+                  .closest("tr[style*='display: table-row;']")
+                  .classList.add('banchecker-matchwithban');
               } else {
                 verdictEl.style.color = 'grey';
               }
@@ -408,12 +411,20 @@ const checkBans = players => {
         } else {
           updateStatus(
             `Looks like we're done.\n\n` +
-              `There were ${banStats.recentBans} players who got banned after playing with you!\n\n` +
-              `Total ban stats: ${banStats.vacBans} VAC banned and ${banStats.gameBans} ` +
-              `Game banned players in games we scanned (a lot of these could happen outside of CS:GO.)\n` +
+              `There ` +
+              (banStats.recentBans === 1
+                ? `was 1 player`
+                : `were ${banStats.recentBans} players`) +
+              ` who got banned after playing with you!\n\n` +
+              `Total ban stats: ${banStats.vacBans} VAC and ${banStats.gameBans} ` +
+              `Game banned players in games we scanned (a lot of these could happen outside of Counter-Strike.)\n` +
               `Total amount of unique players encountered: ${uniquePlayers.length}` +
               `\n\nHover over ban status to check how many days have passed since last ban.`
           );
+          if (banStats.recentBans > 0) {
+            document.querySelector('#banchecker-hideMatchesChk').style.display =
+              'block';
+          }
         }
       }
     );
@@ -556,6 +567,28 @@ chrome.storage.sync.get(['customapikey'], data => {
 });
 
 menu.appendChild(statusBar);
+
+const hideMatchesWithNoBans = document.createElement('label');
+hideMatchesWithNoBans.id = 'banchecker-hideMatchesChk';
+hideMatchesWithNoBans.style.display = 'none';
+const hideMatchesWithNoBansChk = document.createElement('input');
+hideMatchesWithNoBansChk.type = 'checkbox';
+hideMatchesWithNoBansChk.style.marginLeft = 0;
+hideMatchesWithNoBans.append(hideMatchesWithNoBansChk);
+hideMatchesWithNoBans.append('Hide matches with no bans');
+hideMatchesWithNoBansChk.addEventListener('change', event => {
+  const hide = event.currentTarget.checked;
+  const matchesWithNoBans = document.querySelectorAll(
+    '.csgo_scoreboard_root tr[style*="display: table-row;"]:not(.banchecker-matchwithban),' +
+      '.csgo_scoreboard_root tr.banchecker-matchwithoutban'
+  );
+  matchesWithNoBans.forEach(el => {
+    el.classList.add('banchecker-matchwithoutban');
+    el.style.display = hide ? 'none' : 'table-row';
+  });
+});
+menu.appendChild(hideMatchesWithNoBans);
+
 menu.appendChild(funStatsBar);
 
 document.querySelector('#subtabs').insertAdjacentElement('afterend', menu);
