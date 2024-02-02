@@ -81,7 +81,7 @@
     }
   ],
   "background": {
-	  "service_worker": "service_worker.js"
+    "service_worker": "service_worker.js"
   },
   "manifest_version": 3
 }
