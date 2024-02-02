@@ -118,7 +118,10 @@ const initVariables = () => {
     tabURIparam = tabOnEl.parentNode.id.split('_').pop();
   }
 
-  if (tabURIparam === 'matchhistoryscrimmage') {
+  if (
+    tabURIparam === 'matchhistoryscrimmage' ||
+    tabURIparam === 'matchhistorycompetitivepermap'
+  ) {
     waitTimeRowIndex = 2;
     timeRowIndex = 3;
   }
