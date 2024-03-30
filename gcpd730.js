@@ -338,18 +338,29 @@ const checkBans = players => {
         apikey: apikey,
         batch: batches[i]
       },
-      (json, error) => {
+      ({ json, error }) => {
         if (error !== undefined) {
-          updateStatus(
-            `Error while scanning players for bans:\n${error}` +
-              `${
-                retryCount !== undefined && retryCount > 0
-                  ? `\n\nRetrying to scan... ${maxRetries - retryCount}/3`
-                  : `\n\nCouldn't scan for bans after ${maxRetries} retries :(`
-              }`
-          );
-          if (retryCount > 0) {
-            setTimeout(() => fetchBatch(i, retryCount - 1), 3000);
+          if (error === 'No permissions to access Steam Web API') {
+            updateStatus(error);
+            const openOptionsBtn = document.createElement('button');
+            openOptionsBtn.textContent = 'Open options to grant permissions';
+            openOptionsBtn.onclick = () =>
+              chrome.runtime.sendMessage(chrome.runtime.id, {
+                action: 'showOptions'
+              });
+            document.querySelector('#banchecker-menu').append(openOptionsBtn);
+          } else {
+            updateStatus(
+              `Error while scanning players for bans:\n${error}` +
+                `${
+                  retryCount !== undefined && retryCount > 0
+                    ? `\n\nRetrying to scan... ${maxRetries - retryCount}/3`
+                    : `\n\nCouldn't scan for bans after ${maxRetries} retries :(`
+                }`
+            );
+            if (retryCount > 0) {
+              setTimeout(() => fetchBatch(i, retryCount - 1), 3000);
+            }
           }
           return;
         }
@@ -549,7 +560,9 @@ checkBansButton.onclick = () => {
   checkLoadedMatchesForBans();
   if (!providedCustomAPIKey) checkBansButton.onclick = null;
 };
-chrome.storage.sync.get(['customapikey'], data => {
+
+const getStoredAPIKey = async () => {
+  const data = await chrome.storage.sync.get(['customapikey']);
   if (typeof data.customapikey === 'undefined') {
     const defaultkeys = [
       '5DA40A4A4699DEE30C1C9A7BCE84C914',
@@ -564,7 +577,8 @@ chrome.storage.sync.get(['customapikey'], data => {
     apikey = data.customapikey;
   }
   fetchButton.insertAdjacentElement('afterend', checkBansButton);
-});
+};
+getStoredAPIKey();
 
 menu.appendChild(statusBar);
 

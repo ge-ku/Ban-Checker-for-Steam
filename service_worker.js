@@ -49,21 +49,38 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
 // Fetch bans using Steam API
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action == 'fetchBans') {
-    fetch(
-      `https://api.steampowered.com/ISteamUser/GetPlayerBans/v1/?key=${
-        request.apikey
-      }&steamids=${request.batch.join(',')}`
-    )
-      .then(res => {
-        if (res.ok) {
-          return res.json();
+  if (request.action === 'showOptions') {
+    chrome.runtime.openOptionsPage();
+  }
+  if (request.action === 'fetchBans') {
+    chrome.permissions.contains(
+      {
+        origins: ['*://steamcommunity.com/*', 'https://api.steampowered.com/*']
+      },
+      hasPermissions => {
+        if (hasPermissions) {
+          fetch(
+            `https://api.steampowered.com/ISteamUser/GetPlayerBans/v1/?key=${
+              request.apikey
+            }&steamids=${request.batch.join(',')}`
+          )
+            .then(res => {
+              if (res.ok) {
+                return res.json();
+              } else {
+                throw Error(`Code ${res.status}. ${res.statusText}`);
+              }
+            })
+            .then(json => sendResponse({ json }))
+            .catch(error => sendResponse({ json: undefined, error }));
         } else {
-          throw Error(`Code ${res.status}. ${res.statusText}`);
+          sendResponse({
+            json: undefined,
+            error: 'No permissions to access Steam Web API'
+          });
         }
-      })
-      .then(data => sendResponse(data))
-      .catch(error => sendResponse(undefined, error));
+      }
+    );
   }
   return true;
 });

@@ -6,6 +6,9 @@
   <style>
     #settingsBody {
       padding: 1em;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
     #statusSaved {
@@ -17,6 +20,7 @@
       #settingsBody {
         background-color: #434344;
         color: white;
+        min-height: 14em;
       }
 
       #settingsBody a {
@@ -28,19 +32,38 @@
 </head>
 
 <body id="settingsBody">
-  Custom API key:
-  <input type="text" id="customapikey" size="40">
-  <form>
-    <label><input type="radio" name="usecustom" id="radioCustom">Use custom API Key</label>
-    <br>
-    <label><input type="radio" name="usecustom" id="radioDefault" checked>Use default API Key</label>
-  </form>
-  <a href="http://steamcommunity.com/dev/apikey" target="_blank">Get API Key here</a>
-  <br><br>
-  <label><input type="checkbox" id="chkGreentext">Do not write green text ("No Bans for this player.")</label>
-  <div id="statusSaved">Options saved.</div>
-  <div style="text-align:center;">
-    <button id="save">Save</button>
+  <div>
+    Custom API key:
+    <input type="text" id="customapikey" size="40">
+    <form>
+      <label><input type="radio" name="usecustom" id="radioCustom">Use custom API Key</label>
+      <br>
+      <label><input type="radio" name="usecustom" id="radioDefault" checked>Use default API Key</label>
+    </form>
+    <a href="http://steamcommunity.com/dev/apikey" target="_blank">Get API Key here</a>
+    <br><br>
+    <label><input type="checkbox" id="chkGreentext">Do not write green text ("No Bans for this player.")</label>
+    <div id="statusSaved">Options saved.</div>
+    <div style="text-align:center;">
+      <button id="save">Save</button>
+    </div>
+    <div id="permissions" style="margin-top: 2em; display: none;">
+      <div style="text-align:center; font-weight: bold;">Some needed permissions were not granted!</div>
+      <small>
+        <strong>steamcommunity.com</strong> is needed to overlay information on pages such as friends, groups, recently
+        played
+        with and
+        Counter-Strike specific pages
+      </small>
+      <br>
+      <small>
+        <strong>api.steampowered.com</strong> is needed to get data about bans using Steam Web API
+      </small>
+      <br>
+      <div style="text-align:center; margin-top: 1em;">
+        <button id="grantPermissions">Grant permissions</button>
+      </div>
+    </div>
   </div>
   <script src="options.js"></script>
 </body>
