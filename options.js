@@ -4,7 +4,10 @@ function saveOptions() {
     //use custom key
     chrome.storage.sync.set({ customapikey: customapikey }, function () {
       chrome.storage.sync.set(
-        { greentext: !document.getElementById('chkGreentext').checked },
+        {
+          greentext: !document.getElementById('chkGreentext').checked,
+          showcommunitybans: document.getElementById('chkCommunityBans').checked
+        },
         function () {
           var status = document.getElementById('statusSaved');
           status.style.visibility = 'visible';
@@ -21,7 +24,10 @@ function saveOptions() {
     //use default key
     chrome.storage.sync.remove('customapikey', function () {
       chrome.storage.sync.set(
-        { greentext: !document.getElementById('chkGreentext').checked },
+        {
+          greentext: !document.getElementById('chkGreentext').checked,
+          showcommunitybans: document.getElementById('chkCommunityBans').checked
+        },
         function () {
           var status = document.getElementById('statusSaved');
           status.style.visibility = 'visible';
@@ -37,17 +43,24 @@ function saveOptions() {
 }
 
 function restoreOptions() {
-  chrome.storage.sync.get(['customapikey', 'greentext'], function (data) {
-    if (typeof data['customapikey'] == 'undefined') {
-    } else {
-      document.getElementById('customapikey').value = data['customapikey'];
-      document.getElementById('radioCustom').checked = true;
+  chrome.storage.sync.get(
+    ['customapikey', 'greentext', 'showcommunitybans'],
+    function (data) {
+      if (typeof data['customapikey'] == 'undefined') {
+      } else {
+        document.getElementById('customapikey').value = data['customapikey'];
+        document.getElementById('radioCustom').checked = true;
+      }
+      if (typeof data['greentext'] == 'undefined') {
+      } else if (data['greentext'] == false) {
+        document.getElementById('chkGreentext').checked = true;
+      }
+      if (typeof data['showcommunitybans'] == 'undefined') {
+      } else if (data['showcommunitybans'] == true) {
+        document.getElementById('chkCommunityBans').checked = true;
+      }
     }
-    if (typeof data['greentext'] == 'undefined') {
-    } else if (data['greentext'] == false) {
-      document.getElementById('chkGreentext').checked = true;
-    }
-  });
+  );
 }
 
 function getPermissions() {
@@ -64,7 +77,7 @@ function initOptions() {
   restoreOptions();
   document.getElementById('save').addEventListener('click', saveOptions);
 
-  chrome.permissions.contains(
+  chrome.permissions?.contains(
     {
       origins: ['*://steamcommunity.com/*', 'https://api.steampowered.com/*']
     },

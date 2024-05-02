@@ -11,9 +11,21 @@ let loadingWholeHistory = false;
 let providedCustomAPIKey = false;
 let apikey = '';
 
+let showCommunityBans = true;
+chrome.storage.sync.get(['showcommunitybans'], data => {
+  if (typeof data['showcommunitybans'] == 'undefined') {
+    chrome.storage.sync.set({
+      showcommunitybans: true
+    });
+  } else {
+    showCommunityBans = data['showcommunitybans'];
+  }
+});
+
 const banStats = {
   vacBans: 0,
   gameBans: 0,
+  communityBans: 0,
   recentBans: 0
 };
 
@@ -283,6 +295,9 @@ const formatMatchTables = () => {
         }
 
         table.classList.add('banchecker-formatted');
+        const parentRow = table.closest('tr');
+        if (parentRow.style.display === '')
+          parentRow.style.display = 'table-row';
       });
   }
 };
@@ -382,6 +397,11 @@ const checkBans = players => {
             verdict += 'Game';
             banStats.gameBans++;
           }
+          if (showCommunityBans && player.CommunityBanned) {
+            if (verdict) verdict += ' &\n';
+            verdict += 'Community';
+            banStats.communityBans++;
+          }
           if (verdict) {
             const daysAfter = daySinceLastMatch - player.DaysSinceLastBan;
             if (daySinceLastMatch > player.DaysSinceLastBan) {
@@ -429,6 +449,9 @@ const checkBans = players => {
               ` who got banned after playing with you!\n\n` +
               `Total ban stats: ${banStats.vacBans} VAC and ${banStats.gameBans} ` +
               `Game banned players in games we scanned (a lot of these could happen outside of Counter-Strike.)\n` +
+              (showCommunityBans
+                ? `Community bans: ${banStats.communityBans} (these can be hidden in settings)\n`
+                : '') +
               `Total amount of unique players encountered: ${uniquePlayers.length}` +
               `\n\nHover over ban status to check how many days have passed since last ban.`
           );
@@ -674,11 +697,14 @@ const hideSettings = () => {
   const settingsDiv = document.getElementById('settingsDiv');
   settingsShade.className = 'fadeOut';
   settingsDiv.className = 'fadeOut';
-  chrome.storage.sync.get(['customapikey'], data => {
+  chrome.storage.sync.get(['customapikey', 'showcommunitybans'], data => {
     if (typeof data.customapikey !== 'undefined' && !providedCustomAPIKey) {
       location.reload();
     } else {
-      updateStatus('Reload the page if you changed API key!');
+      updateStatus('Reload the page if you changed your API key!', true);
+    }
+    if (typeof data.showcommunitybans !== undefined) {
+      showCommunityBans = data.showcommunitybans;
     }
   });
 };
