@@ -96,8 +96,7 @@ checkBans = () => {
           }
           return;
         }
-
-        data.players.forEach(player => doPlayer(player));
+        data.json.players.forEach(player => doPlayer(player));
         if (batches.length > i + 1) {
           setTimeout(() => fetchBatch(i + 1), 1000);
         } else {
