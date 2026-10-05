@@ -132,7 +132,8 @@ const initVariables = () => {
 
   if (
     tabURIparam === 'matchhistoryscrimmage' ||
-    tabURIparam === 'matchhistorycompetitivepermap'
+    tabURIparam === 'matchhistorycompetitivepermap' ||
+    tabURIparam === 'matchhistoryrush'
   ) {
     waitTimeRowIndex = 2;
     timeRowIndex = 3;

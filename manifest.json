@@ -1,17 +1,13 @@
 {
   "name": "Ban Checker for Steam",
   "description": "Automatically check bans of people you recently played with, your friends, and group members.",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "icons": {
     "16": "icons/ow16.png",
     "48": "icons/ow48.png",
     "128": "icons/ow128.png"
   },
-  "permissions": [
-    "storage",
-    "alarms",
-    "contextMenus"    
-  ],
+  "permissions": ["storage", "alarms", "contextMenus"],
   "host_permissions": [
     "*://steamcommunity.com/*",
     "https://api.steampowered.com/*"
@@ -20,10 +16,12 @@
   "options_ui": {
     "page": "options.html"
   },
-  "web_accessible_resources": [{
-    "resources": ["options.html", "icons/*.svg"],
-    "matches": ["<all_urls>"]
-  }],
+  "web_accessible_resources": [
+    {
+      "resources": ["options.html", "icons/*.svg"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "content_scripts": [
     {
       "js": ["checkbans.js", "options.js"],
@@ -65,6 +63,8 @@
         "*://steamcommunity.com/profiles/*/gcpd/730*tab=matchhistoryscrimmage",
         "*://steamcommunity.com/id/*/gcpd/730*tab=matchhistoryophydra",
         "*://steamcommunity.com/profiles/*/gcpd/730*tab=matchhistoryophydra",
+        "*://steamcommunity.com/id/*/gcpd/730*tab=matchhistoryrush",
+        "*://steamcommunity.com/profiles/*/gcpd/730*tab=matchhistoryrush",
         "*://steamcommunity.com/id/*/gcpd/730*tab=playerreports",
         "*://steamcommunity.com/profiles/*/gcpd/730*tab=playerreports",
         "*://steamcommunity.com/id/*/gcpd/730*tab=playercommends",
