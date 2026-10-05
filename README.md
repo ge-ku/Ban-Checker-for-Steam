@@ -5,7 +5,7 @@
 [Install from Microsoft Edge Addons.(Beta)](https://microsoftedge.microsoft.com/addons/detail/ban-checker-for-steam/jpfpinbbmcpbnnohhdhpibfpfoikgjjf)
 
 Chrome and Firefox extension to check bans of people you recently played with (or your friends and groups members).
-It also works on [Counter-Strike specific pages](https://steamcommunity.com/id/geku/gcpd/730). To track all your recorded Counter-Strike matches you have to provide your own Steam API key. Otherwise it will only scan last 100 encountered players.
+It also works on [Counter-Strike specific pages](https://steamcommunity.com/my/gcpd/730). To track all your recorded Counter-Strike matches you have to provide your own Steam API key. Otherwise it will only scan last 100 encountered players.
 
 Script works on pages with URIs that follow such patterns:
 
